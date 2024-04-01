@@ -8,7 +8,7 @@ import com.zipper.opengl.utils.OpenGLHelper
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-class ImageFilter(context: Context) {
+class ImageFilter2(context: Context) {
     private val vertexShaderCode = AssetsUtil.getAssetsContent(context, "image.vert")
 
     private val fragmentShaderCode = AssetsUtil.getAssetsContent(context, "image.frag")

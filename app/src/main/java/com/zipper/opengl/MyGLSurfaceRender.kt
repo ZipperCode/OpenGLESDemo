@@ -3,9 +3,14 @@ package com.zipper.opengl
 import android.content.Context
 import android.opengl.GLES20
 import android.opengl.GLSurfaceView
-import com.zipper.opengl.filter.ImageFilter
+import com.zipper.opengl.filter.BackgroundFilter
+import com.zipper.opengl.filter.LineFilter
+import com.zipper.opengl.filter.LineFilter2
+import com.zipper.opengl.filter.OffscreenBufferHelper
 import com.zipper.opengl.filter.RectFilter
+import com.zipper.opengl.filter.TextureFilter
 import com.zipper.opengl.filter.TrianglesFilter
+import com.zipper.opengl.utils.MatrixHelper
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -56,17 +61,31 @@ class MyGLSurfaceRender(private val context: Context) : GLSurfaceView.Renderer {
 
     private val rectFilter = RectFilter()
 
-    private val imageFilter = ImageFilter(context)
+    private var width: Int = 1
+
+    private var height: Int = 1
+
+    private val matrix: FloatArray = FloatArray(16)
+
+    private val imageFilter = LineFilter2(context)
+
+    private val backgroundFilter = BackgroundFilter(context)
+
+    private val lineFilter = LineFilter(context)
+
+    private val offscreenBufferHelper = OffscreenBufferHelper()
+
+    private val textureFilter = TextureFilter(context)
 
     override fun onSurfaceCreated(
         gl: GL10?,
         config: EGLConfig?,
     ) {
-        GLES20.glClearColor(1.0f, 0.0f, 0.0f, 1.0f)
-        imageFilter.onSurfaceCreate()
-//        vPosition.put(vVertexCoords)
-//        vPosition.position(0)
-//        program = OpenGLHelper.createProgram(vertexShaderCode, fragmentShaderCode)
+        GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
+
+        backgroundFilter.onSurfaceCreate()
+        lineFilter.onSurfaceCreate()
+        textureFilter.onSurfaceCreate()
     }
 
     override fun onSurfaceChanged(
@@ -74,21 +93,32 @@ class MyGLSurfaceRender(private val context: Context) : GLSurfaceView.Renderer {
         width: Int,
         height: Int,
     ) {
+        this.width = width
+        this.height = height
         GLES20.glViewport(0, 0, width, height)
+        MatrixHelper.handleOrthoM(matrix, width, height)
+//        backgroundFilter.onSurfaceChanged(matrix, width, height)
+//        lineFilter.onSurfaceChanged(matrix, width, height)
     }
 
     override fun onDrawFrame(gl: GL10?) {
+        GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
-//        vPosition.position(0)
-//        GLES20.glUseProgram(program)
-//        vPositionHandle = GLES20.glGetAttribLocation(program, "vPosition")
-//        GLES20.glVertexAttribPointer(0, 3, GLES20.GL_FLOAT, false, 4 * 3, vPosition)
-//        GLES20.glEnableVertexAttribArray(vPositionHandle)
-//
-//        vColorHandle = GLES20.glGetUniformLocation(program, "vColor")
-//        GLES20.glUniform4fv(vColorHandle, 0, color, 0)
-//
-//        GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, 3)
-        imageFilter.onDrawFrame()
+        backgroundFilter.isDrawViewBackground = false
+        backgroundFilter.onDrawFrame()
+        if (!offscreenBufferHelper.isInit) {
+            offscreenBufferHelper.createFrameBuffer(width, height)
+        }
+
+        offscreenBufferHelper.switchCustomBuffer()
+        backgroundFilter.isDrawViewBackground = false
+        backgroundFilter.onDrawFrame()
+        offscreenBufferHelper.switchSystemBuffer()
+
+        GLES20.glEnable(GLES20.GL_BLEND)
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+        textureFilter.onDrawFrame(matrix)
+
+        lineFilter.onDrawFrame(matrix)
     }
 }
