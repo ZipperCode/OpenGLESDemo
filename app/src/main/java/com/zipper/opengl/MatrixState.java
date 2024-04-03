@@ -6,7 +6,15 @@ import java.util.Arrays;
 import java.util.Stack;
 
 /**
- * 矩阵操作类Ma
+ * 矩阵操作类
+ * - 设置摄像机的位置
+ * - 设置投影模式 正交投影
+ * - 获取总变换矩阵
+ * - 使用栈用于物体做变换
+ * - 提供缩放平移变换操作
+ *
+ * 做矩阵变换前，pushStack保存变换前的矩阵，变换完成后，再popStack恢复
+ *
  * @author zhangzhipeng
  * @date 2024/4/1
  */
@@ -57,7 +65,7 @@ public class MatrixState {
         Matrix.orthoM(this.mProjMatrix, 0, left, right, bottom, top, near, far);
     }
 
-    public void c() {
+    public void popStack() {
         this.currentMatrix = this.matrixStack.pop();
     }
 
@@ -65,6 +73,7 @@ public class MatrixState {
         // 当前变换矩阵中的各元素入栈
         this.matrixStack.push(Arrays.copyOf(this.currentMatrix, 16));
     }
+
 
     public void scaleM(float x, float y, float z) {
         Matrix.scaleM(this.currentMatrix, 0, x, y, z);

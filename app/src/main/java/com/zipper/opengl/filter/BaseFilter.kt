@@ -2,7 +2,6 @@ package com.zipper.opengl.filter
 
 import android.content.Context
 import android.opengl.GLES20
-import com.zipper.opengl.utils.MatrixHelper
 import com.zipper.opengl.utils.OpenGLHelper
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -44,14 +43,14 @@ val textureCoords = floatArrayOf(
 abstract class BaseFilter(protected val context: Context) {
 
     protected var programHandle = 0
-    private var positionHandle = 0
-    private var textureCoordinateHandle = 0
+    protected var positionHandle = 0
+    protected var textureCoordinateHandle = 0
     private var matrixHandle = 0
 
     /**
      * 顶点坐标数据缓冲区
      */
-    private val positionBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertexPositions.size * 4)
+    protected val positionBuffer: FloatBuffer = ByteBuffer.allocateDirect(vertexPositions.size * 4)
         .order(ByteOrder.nativeOrder())
         .asFloatBuffer().apply {
             put(vertexPositions)
@@ -61,7 +60,7 @@ abstract class BaseFilter(protected val context: Context) {
     /**
      * 纹理坐标数据缓冲区
      */
-    private val textureCoordinateBuffer: FloatBuffer =
+    protected val textureCoordinateBuffer: FloatBuffer =
         ByteBuffer.allocateDirect(textureCoords.size * 4)
             .order(ByteOrder.nativeOrder())
             .asFloatBuffer().apply {
@@ -82,22 +81,33 @@ abstract class BaseFilter(protected val context: Context) {
         this.matrixHandle = GLES20.glGetUniformLocation(this.programHandle, "vMatrix")
     }
 
-    open fun onSurfaceChanged(matrix: FloatArray, width: Int, height: Int) {
-        MatrixHelper.handleOrthoM(matrix, width, height)
-    }
-
-    @JvmOverloads
-    open fun onDrawFrame(matrix: FloatArray? = null) {
+    protected open fun useProgram(matrix: FloatArray?) {
         GLES20.glUseProgram(this.programHandle)
         if (matrix != null) {
             GLES20.glUniformMatrix4fv(this.matrixHandle, 1, false, matrix, 0)
         }
-        GLES20.glEnable(GLES20.GL_TEXTURE2)
-        GLES20.glUseProgram(this.programHandle)
-        onDrawBefore(matrix)
-        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
-        onDrawAfter()
     }
+
+    protected open fun enablePointer() {
+        // 启用顶点数组引用
+        GLES20.glEnableVertexAttribArray(this.positionHandle)
+        GLES20.glEnableVertexAttribArray(this.textureCoordinateHandle)
+        // 顶点赋值
+        GLES20.glVertexAttribPointer(this.positionHandle, 2, GLES20.GL_FLOAT, false, 8, this.positionBuffer)
+        GLES20.glVertexAttribPointer(this.textureCoordinateHandle, 2, GLES20.GL_FLOAT, false, 8, this.textureCoordinateBuffer)
+    }
+
+    protected open fun disablePointer() {
+        GLES20.glDisableVertexAttribArray(this.positionHandle)
+        GLES20.glDisableVertexAttribArray(this.textureCoordinateHandle)
+    }
+
+    @JvmOverloads
+    open fun onDrawFrame(matrix: FloatArray? = null) {
+
+    }
+
+
 
     open fun onDrawBefore(matrix: FloatArray?) {
         // 启用顶点数组引用

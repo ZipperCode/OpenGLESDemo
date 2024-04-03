@@ -27,11 +27,9 @@ class OffscreenBufferHelper {
         if (this.textureId == 0) {
             this.textureId = OpenGLHelper.createTexture(this.width, this.height)
         }
-        if (this.textureId > 0) {
-            // 将纹理绑定到自定义的缓冲区
-            GLES20.glBindTexture(GLES20.GL_FRAMEBUFFER, this.textureId)
-            GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D, this.textureId, 0)
-        }
+        // 将纹理绑定到自定义的缓冲区
+        GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, this.frameBufferHandle)
+        GLES20.glFramebufferTexture2D(GLES20.GL_FRAMEBUFFER, GLES20.GL_COLOR_ATTACHMENT0, GLES20.GL_TEXTURE_2D, this.textureId, 0)
     }
 
     /**
@@ -48,14 +46,17 @@ class OffscreenBufferHelper {
     /**
      * 创建帧缓冲区
      */
-    fun createFrameBuffer(width: Int, height: Int): Boolean {
+    fun checkCreateFrameBuffer(width: Int, height: Int): Boolean {
+        if (isInit) {
+            return true
+        }
         this.width = width
         this.height = height
         val arr = IntArray(1)
         GLES20.glGenFramebuffers(1, arr, 0)
         this.frameBufferHandle = arr[0]
         GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, this.frameBufferHandle)
-        isInit = true
-        return this.frameBufferHandle > 0
+        isInit = this.frameBufferHandle > 0
+        return isInit
     }
 }

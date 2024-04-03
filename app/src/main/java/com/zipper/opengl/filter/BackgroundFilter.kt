@@ -15,20 +15,26 @@ class BackgroundFilter(context: Context) : BaseFilter(context) {
 
     private var colorHandle = 0
 
-    var isDrawViewBackground = false
-
     override fun onSurfaceCreate() {
         super.onSurfaceCreate()
         colorHandle = GLES20.glGetUniformLocation(programHandle, "bg_Color")
     }
 
-    override fun onDrawBefore(matrix: FloatArray?) {
-        super.onDrawBefore(matrix)
-        if (isDrawViewBackground) {
-            GLES20.glUniform4fv(this.colorHandle, 1, this.backgroundFloatArr, 0)
-        } else {
-            GLES20.glUniform4fv(this.colorHandle, 1, this.colorFloatArr, 0)
-        }
+    private fun draw(colorArr: FloatArray) {
+        useProgram(null)
+        enablePointer()
+        GLES20.glUniform4fv(this.colorHandle, 1, colorArr, 0)
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+        disablePointer()
+        GLES20.glUseProgram(0)
+    }
+
+    fun drawBackground() {
+        draw(this.backgroundFloatArr)
+    }
+
+    fun drawWhite() {
+        draw(this.colorFloatArr)
     }
 
     override fun getVertexShaderCode(): String {

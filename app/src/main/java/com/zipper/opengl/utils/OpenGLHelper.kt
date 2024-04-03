@@ -127,9 +127,9 @@ object OpenGLHelper {
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, arr[0])
 
         // 设置最小过滤器 为 最近采样： 使用纹理坐标最接近的颜色作为需要绘制的颜色
-        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST.toFloat())
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR.toFloat())
         // 设置最大功过滤器 为 线性采样器：使用纹理坐标 附近的若干个颜色，加权平均 得到需要绘制的颜色
-        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_NEAREST.toFloat())
+        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR.toFloat())
 
         // 设置环绕方向S，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
         GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE.toFloat())
@@ -140,5 +140,31 @@ object OpenGLHelper {
         GLES20.glTexImage2D(GLES20.GL_TEXTURE_2D, 0, GLES20.GL_RGBA, width, height, 0, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, null)
 
         return textureId
+    }
+
+    /**
+     * 半透明混合
+     */
+    fun halfAlphaBlend() {
+        // 关键步骤，启用颜色混合
+        GLES20.glEnable(GLES20.GL_BLEND)
+        // 设置混合因子 目标颜色的透明度 = 1 - 源颜色的透明度，此时，如果绘制物体的透明度小于1，则会绘制为透明色
+        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+    }
+
+    /**
+     * 将MotionEvent坐标系转化为OpenGL坐标系
+     * 加减去 0.5表示将坐标调整到中心，并乘以2，实现 -1, 1 的坐标系转变
+     */
+    fun convertGlVertex(offsetXRatio: Float, offsetYRatio: Float): FloatArray {
+        return floatArrayOf(offsetXRatio - 0.5f * 2f, -offsetYRatio + 0.5f * 2f)
+    }
+
+    fun convertGlXVertex(offsetXRatio: Float): Float {
+        return offsetXRatio - 0.5f * 2f
+    }
+
+    fun convertedGlYVertex(offsetYRatio: Float): Float {
+        return -offsetYRatio + 0.5f * 2f
     }
 }

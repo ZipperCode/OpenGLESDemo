@@ -24,16 +24,16 @@ class TextureFilter(context: Context) : BaseFilter(context) {
         onDrawFrame(matrix)
     }
 
-    override fun onDrawBefore(matrix: FloatArray?) {
-        super.onDrawBefore(matrix)
+    fun draw(matrix: FloatArray?, textureId: Int) {
+        useProgram(matrix)
         GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
-        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, renderTextureId)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
         GLES20.glUniform1i(fboTextureHandle, 0)
-    }
-
-    override fun onDrawAfter() {
+        enablePointer()
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
-        super.onDrawAfter()
+        disablePointer()
+        GLES20.glUseProgram(0)
     }
 
     override fun getVertexShaderCode(): String {

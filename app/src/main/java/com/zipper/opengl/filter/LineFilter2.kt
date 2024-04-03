@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.opengl.GLES20
 import com.zipper.opengl.utils.AssetsUtil
-import com.zipper.opengl.utils.MatrixHelper
+import com.zipper.opengl.utils.MatrixUtil
 import com.zipper.opengl.utils.OpenGLHelper
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -93,7 +93,7 @@ class LineFilter2(context: Context) {
     private val matrix: FloatArray = FloatArray(16)
 
     fun onSurfaceChanged(width: Int, height: Int) {
-        MatrixHelper.handleOrthoM(matrix, width, height)
+        MatrixUtil.handleOrthoM(matrix, width, height)
     }
 
     fun onDrawFrame() {

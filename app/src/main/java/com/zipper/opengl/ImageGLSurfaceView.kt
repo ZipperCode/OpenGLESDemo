@@ -1,41 +1,39 @@
 package com.zipper.opengl
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
+import android.util.Log
+import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
+import kotlin.math.abs
+import kotlin.math.max
 
 class ImageGLSurfaceView
 @JvmOverloads
 constructor(context: Context, attrs: AttributeSet? = null) : GLSurfaceView(context, attrs) {
 
-    private val scaleGestureDetector = ScaleGestureDetector(
-        context,
-        ScaleGestureListyenerImpl(),
-    )
+    companion object {
+        const val SCALE_MAX = 3.0f
+        const val SCALE_MIN = 0.7f
+    }
 
-    private val render = MyGLSurfaceRender(context)
+
+    val render = MyGLSurfaceRender(context)
+
+    private val gestureHandler = GestureHandler(this, render)
 
     init {
         setEGLContextClientVersion(2)
-        setRenderer(MyGLSurfaceRender(context))
+        setRenderer(render)
     }
 
-    class ScaleGestureListyenerImpl : ScaleGestureDetector.OnScaleGestureListener {
-        override fun onScale(detector: ScaleGestureDetector): Boolean {
-            return true
-        }
 
-        override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
-            return true
-        }
-
-        override fun onScaleEnd(detector: ScaleGestureDetector) {
-        }
-    }
-
+    @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        return scaleGestureDetector.onTouchEvent(event)
+        return gestureHandler.onTouchEvent(event)
     }
+
 }

@@ -19,25 +19,22 @@ class LineFilter(context: Context) : BaseFilter(context) {
 
     private var lineTextureHandle = 0
 
-    public override fun onSurfaceCreate() {
+    override fun onSurfaceCreate() {
         super.onSurfaceCreate()
         lineTextureHandle = GLES20.glGetAttribLocation(programHandle, "lineTexture")
         maskNearestTextureId = OpenGLHelper.createTexTexture(maskBitmap)
     }
 
-    override fun onDrawFrame(matrix: FloatArray?) {
-        // 关键步骤，启用颜色混合
-        GLES20.glEnable(GLES20.GL_BLEND)
-        // 设置混合因子 目标颜色的透明度 = 1 - 源颜色的透明度，此时，如果绘制物体的透明度小于1，则会绘制为透明色
-        GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
-        super.onDrawFrame(matrix)
-    }
-
-    override fun onDrawBefore(matrix: FloatArray?) {
-        super.onDrawBefore(matrix)
-        GLES20.glActiveTexture(maskNearestTextureId)
-        GLES20.glBindTexture(GLES20.GL_TEXTURE0, maskNearestTextureId)
+    fun draw(matrix: FloatArray) {
+        useProgram(matrix)
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, maskNearestTextureId)
         GLES20.glUniform1i(this.lineTextureHandle, 0)
+        enablePointer()
+        GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
+        disablePointer()
+        GLES20.glUseProgram(0)
     }
 
     override fun getVertexShaderCode(): String {
