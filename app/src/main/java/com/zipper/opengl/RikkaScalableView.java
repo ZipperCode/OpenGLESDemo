@@ -114,7 +114,7 @@ public class RikkaScalableView extends View {
 //        }
 
         smallScale = 0.5f;
-        bigScale = 5f;
+        bigScale = 2f;
         //初始放大倍数等于smallScale(最小)
         currentScale = smallScale;
     }
@@ -228,7 +228,7 @@ public class RikkaScalableView extends View {
         public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
             offsetX -= distanceX;
             offsetY -= distanceY;
-//            notOutBound();
+            notOutBound();
             invalidate();
             return false;
         }

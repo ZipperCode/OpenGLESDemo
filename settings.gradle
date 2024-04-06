@@ -15,3 +15,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "OpenGLEDemo"
 include ':app'
+include ':egl_fbo'

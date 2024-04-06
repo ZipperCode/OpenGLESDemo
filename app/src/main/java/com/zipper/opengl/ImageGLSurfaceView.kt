@@ -23,7 +23,7 @@ constructor(context: Context, attrs: AttributeSet? = null) : GLSurfaceView(conte
 
     val render = MyGLSurfaceRender(context)
 
-    private val gestureHandler = GestureHandler(this, render)
+//    private val gestureHandler = GestureHandler(this, render)
 
     init {
         setEGLContextClientVersion(2)
@@ -33,7 +33,8 @@ constructor(context: Context, attrs: AttributeSet? = null) : GLSurfaceView(conte
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        return gestureHandler.onTouchEvent(event)
+//        return gestureHandler.onTouchEvent(event)
+        return false
     }
 
 }

@@ -1,51 +1,77 @@
 package com.zipper.opengl
 
+import android.graphics.Matrix
+import android.graphics.RectF
 import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
 import android.view.ViewConfiguration
 import kotlinx.coroutines.Runnable
-import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 /**
  *
- * @author  zhangzhipeng
- * @date    2024/4/3
+ * @author zhangzhipeng
+ * @date 2024/4/3
  */
 class GestureHandler(
-    private val surfaceView: ImageGLSurfaceView,
-    private val render: MyGLSurfaceRender
+    private val renderView: IView
 ) : GestureDetector.OnGestureListener, ScaleGestureDetector.OnScaleGestureListener {
-
     private enum class State {
         None,
         Zone,
-        Drag
+        Drag,
+    }
+
+    private enum class EventState {
+        Scroll,
+        Fling,
+        Scale,
+        None,
     }
 
     private var state = State.None
 
-    private var preScale = 1f
+    private var eventState = EventState.None
 
-    private var minScale = 1f
+    private var currentScale = 1f
 
-    private var maxScale = 10f
+    private var minScale = 0.7f
 
-    private val scaleGestureDetector = ScaleGestureDetector(surfaceView.context, this)
+    private var maxScale = 3f
 
-    private val gestureDetector = GestureDetector(surfaceView.context, this)
+    private var scaleFocusX = 0f
+    private var scaleFocusY = 0f
 
-    private val scaledTouchSlop = ViewConfiguration.get(surfaceView.context).scaledTouchSlop
+    private val scaleGestureDetector = ScaleGestureDetector(renderView.requireContext(), this)
 
-    private val scroller = DragScroller(surfaceView.context)
+    private val gestureDetector = GestureDetector(renderView.requireContext(), this)
+
+    private val scaledTouchSlop = ViewConfiguration.get(renderView.requireContext()).scaledTouchSlop
+
+    private val scroller = DragScroller(renderView.requireContext())
 
     private val flingRunnable = FlingRunnable()
 
+    private val graphicsMatrixArray = FloatArray(9)
+
+    private val graphicsMatrix = Matrix()
+
+    private val viewWidth get() = renderView.viewWidth()
+
+    private val viewHeight get() = renderView.viewHeight()
+
+    private val renderWidth get() = renderView.renderWidth()
+
+    private val renderHeight get() = renderView.renderHeight()
+
     fun onTouchEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_DOWN) {
-            state = State.Zone
+            state = State.Drag
         } else if (event.actionMasked == MotionEvent.ACTION_POINTER_DOWN) {
+            Log.e("BAAA", "ACTION_POINTER_DOWN")
             state = State.Zone
         }
 
@@ -53,132 +79,223 @@ class GestureHandler(
             state = State.None
         }
 
+        scaleGestureDetector.onTouchEvent(event)
+
+
         if (state === State.Zone) {
+//            Log.e("BAAA", "Zone")
 //            scaleGestureDetector.onTouchEvent(event)
 //            return true
         } else if (state === State.Drag) {
+            Log.d("BAAA", "Drag  currentScale = ${graphicsMatrixArray.contentToString()}  - $currentScale")
             gestureDetector.onTouchEvent(event)
+//            Log.d("BAAA", "state = " + state)
         }
 
+
+//        if (scaleGestureDetector.isInProgress) {
+//            gestureDetector.onTouchEvent(event)
+//        }
         return true
     }
 
-    /**
-     * 按下的位置
-     */
-    private var lastDownX = 0f
-    private var lastDownY = 0f
+    fun onSizeChange(width: Int, height: Int) {
+//        rect.set(0f, 0f, width.toFloat(), height.toFloat())
+//        graphicsMatrix.mapRect(rect)
+    }
+
+    private fun requestRender() {
+        val fraction = currentScale - minScale / maxScale - minScale
+        graphicsMatrix.reset()
+        graphicsMatrix.postTranslate(offsetX, offsetY)
+        graphicsMatrix.postScale(currentScale, currentScale, scaleFocusX, scaleFocusY)
+        graphicsMatrix.getValues(graphicsMatrixArray)
+//        invertMatrix.reset()
+//        invertMatrix.setValues(graphicsMatrixArray)
+//        val invertMatrixArr = FloatArray(9)
+//        invertMatrix.getValues(invertMatrixArr)
+        Log.w("BAAA", "Render graphicsMatrixArray = ${graphicsMatrixArray.contentToString()}")
+//        Log.w("BAAA", "Render invertMatrix = ${invertMatrixArr.contentToString()}")
+        renderView.requestRender(graphicsMatrixArray)
+    }
+
+    private fun getMatrixValue(index:Int):Float {
+        graphicsMatrix.getValues(graphicsMatrixArray)
+        return graphicsMatrixArray[index]
+    }
+
+    private fun getMatrixValue(matrix: Matrix, index: Int):Float {
+        val arr = FloatArray(9)
+        matrix.getValues(arr)
+        return arr[index]
+    }
 
     override fun onDown(e: MotionEvent): Boolean {
-        Log.d("BAAA", "GestureListenerImpl onDown")
-        lastDownX = e.x
-        lastDownY = e.y
-        pointEndX = e.x
-        pointEndY = e.y
+        Log.e("EventState", "GestureListenerImpl onDown x = ${e.x} y = ${e.y}")
+        eventState = EventState.None
         return true
     }
 
     override fun onShowPress(e: MotionEvent) {
-        Log.d("BAAA", "onShowPress 按下")
+        Log.e("EventState", "onShowPress 按下")
     }
 
     override fun onSingleTapUp(e: MotionEvent): Boolean {
-        Log.d("BAAA", "onSingleTapUp 在touch down 后没有滑动（onScroll）又没有长按（onLongPress）的情况下触发")
+        Log.e("EventState", "onSingleTapUp 在touch down 后没有滑动（onScroll）又没有长按（onLongPress）的情况下触发")
         return false
     }
 
-    /**
-     * 手指最后停留的位置
-     */
-    private var pointEndX = 0f
-    private var pointEndY = 0f
 
-    override fun onScroll(e1: MotionEvent?, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
-        pointEndX -= distanceX
-        pointEndY -= distanceY
-        render.onScroll(distanceX / surfaceView.width, distanceY / surfaceView.height)
-        surfaceView.requestRender()
+    private var offsetX = 0f
+    private var offsetY = 0f
+
+    private fun getMinX() = min(0f, (-renderWidth * currentScale + viewWidth / 2))
+
+    private fun getMaxX() = max(0f, (renderWidth * currentScale - viewWidth) / 2)
+
+    private fun getMinY() = min(-renderHeight * currentScale + viewHeight / 2f, 0f)
+
+    private fun getMaxY() = max(0f, (renderHeight * currentScale - viewHeight) / 2)
+
+    override fun onScroll(
+        e1: MotionEvent?,
+        e2: MotionEvent,
+        distanceX: Float,
+        distanceY: Float,
+    ): Boolean {
+        cancelAnimation(flingRunnable)
+        Log.e("EventState", "Gesture onScroll 滑动 currentScale = ${graphicsMatrixArray.contentToString()} - $currentScale")
+        updateTranslate(distanceX, distanceY)
         return false
     }
 
-    override fun onLongPress(e: MotionEvent) {
-        Log.d("BAAA", "onLongPress 长按")
+    private fun setTranslate() {
+        Log.d("BAAA", "maxX = ${getMaxX()} minX = ${getMinX()} maxY = ${getMaxY()} minY = ${getMinY()}")
+        val fraction = currentScale - minScale / maxScale - minScale
+        offsetX = min(offsetX, getMaxX())
+        offsetX = max(offsetX, getMinX())
+        offsetY = min(offsetY, getMaxY())
+        offsetY = max(offsetY, getMinY())
+
+        val currentMatrix = Matrix()
+        currentMatrix.setValues(graphicsMatrixArray)
+
+        val afterMatrix = Matrix()
+        afterMatrix.set(currentMatrix)
+        currentMatrix.postTranslate(offsetX, offsetY)
+
+        val resultMatrix = Matrix()
+        afterMatrix.invert(resultMatrix)
+        resultMatrix.postConcat(currentMatrix)
+        val arr = FloatArray(9)
+
+//        currentMatrix.getValues(arr)
+//        Log.d("BAAA", "current = ${arr.contentToString()}")
+//        afterMatrix.getValues(arr)
+//        Log.d("BAAA", "after = ${arr.contentToString()}")
+//        resultMatrix.getValues(arr)
+//        Log.d("BAAA", "result = ${arr.contentToString()}")
+//
+//        val transX = getMatrixValue(resultMatrix, Matrix.MTRANS_X)
+//        val transY = getMatrixValue(resultMatrix, Matrix.MTRANS_Y)
+//        Log.d("BAAA", "TransX = $transX TransY = $transY")
+
+//        graphicsMatrix.postTranslate(transX, transY)
+
+
+//        Log.w("BAAA", "setTranslate matrix = ${graphicsMatrixArray.contentToString()}")
+//        val invertMatrixArr = FloatArray(9)
+//        invertMatrix.getValues(invertMatrixArr)
+//        Log.w("BAAA", "setTranslate invertMatrix = ${invertMatrixArr.contentToString()}")
+//        graphicsMatrix.setTranslate(offsetX, offsetY)
+//        graphicsMatrix.postScale(currentScale, currentScale)
     }
 
-    override fun onFling(e1: MotionEvent?, e2: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
-        Log.d("BAAA", "onFling 滑动")
+    override fun onLongPress(e: MotionEvent) = Unit
+
+    override fun onFling(
+        e1: MotionEvent?,
+        e2: MotionEvent,
+        velocityX: Float,
+        velocityY: Float,
+    ): Boolean {
+
+        Log.e("EventState", "Gesture onFling 滑动")
         val pointCount1 = e1?.pointerCount ?: 0
         val pointCount2 = e2.pointerCount
         if (pointCount1 > 1 || pointCount2 > 1) {
             return false
         }
-        flingRunnable.onFling(pointEndX.toInt(), pointEndY.toInt(), -velocityX.toInt(), -velocityY.toInt())
+        val minX = getMinX().toInt()
+        val maxX = getMaxX().toInt()
+        val minY = getMinY().toInt()
+        val maxY = getMaxY().toInt()
+//        Log.e("EventState", "Gesture onFling 滑动 minX = $minX maxX = $maxX minY = $minY maxY = $maxY offsetX = $offsetX offsetY = $offsetY")
+        scroller.fling(
+            offsetX.toInt(), offsetY.toInt(),
+            velocityX.toInt(), velocityY.toInt(),
+            minX, maxX, minY, maxY
+//            0,100,0,100
+        )
+
         postOnAnimation(flingRunnable)
         return false
     }
 
-    fun handleFlingUpdate(distanceX: Int, distanceY: Int) {
+    fun updateTranslate(distanceX: Float, distanceY: Float) {
+        val fraction = currentScale - minScale / maxScale - minScale
+        offsetX -= distanceX
+        offsetY -= distanceY
+        Log.d("BAAAA", "====================== fracttion = $fraction")
 
+        setTranslate()
+        requestRender()
     }
 
     fun postOnAnimation(runnable: Runnable) {
-        surfaceView.postOnAnimation(runnable)
+        renderView.startAnimation(runnable)
     }
 
-    private var initialSpan = 0f
-    private var currentSpan = 0f
+    private fun cancelAnimation(runnable: Runnable) {
+        renderView.cancelAnimation(runnable)
+    }
 
+
+    /**
+     * @return true 表示缩放事件被处理了，检测器会重新累计缩放因子， false继续累计缩放因子
+     */
     override fun onScale(detector: ScaleGestureDetector): Boolean {
-        currentSpan = detector.currentSpan
-        Log.d("BAAA", "onScale currentSpan = $currentSpan initialSpan = $initialSpan")
-        if (abs(currentSpan - initialSpan) > 10) {
-            var currentScale = detector.scaleFactor * preScale
-            Log.d("BAAA", "onScale currentScale = $currentScale")
-            if (currentScale < minScale) {
-                currentScale = minScale
-            } else if (currentScale > maxScale) {
-                currentScale = maxScale
-            }
-
-            preScale = currentScale
-        }
+        currentScale *= detector.scaleFactor
+        currentScale = max(minScale, currentScale)
+        currentScale = min(currentScale, maxScale)
+        Log.w("BAAA", "setScale")
+        graphicsMatrix.setScale(currentScale, currentScale, detector.focusX, detector.focusY)
+        scaleFocusX = detector.focusX
+        scaleFocusY = detector.focusY
+        Log.e("EventState", "Gesture onScale detector.scaleFactor = ${detector.scaleFactor} scale = $currentScale")
+        requestRender()
         return true
     }
 
     override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
-        initialSpan = detector.currentSpan
         return true
     }
 
-    override fun onScaleEnd(detector: ScaleGestureDetector) = Unit
-
+    override fun onScaleEnd(detector: ScaleGestureDetector) {
+        Log.e("EventState", "Gesture onScaleEnd currentScale = ${getMatrixValue(Matrix.MSCALE_X)}")
+    }
 
     inner class FlingRunnable : Runnable {
-
-        private var currentX = 0
-        private var currentY = 0
-
-        fun onFling(startX: Int, startY: Int, velocityX: Int, velocityY: Int) {
-            currentX = startX
-            currentY = startY
-            scroller.fling(
-                startX, startY,
-                velocityX, velocityY,
-                0, 100,
-                0, 100
-            )
-        }
 
         override fun run() {
             if (scroller.isFinished) {
                 return
             }
+
             if (scroller.computeScrollOffset()) {
-                val x = scroller.currX
-                val y = scroller.currY
-                handleFlingUpdate(currentX - x, currentY - y)
-                currentX = x
-                currentY = y
+                val dx = offsetX - scroller.currX * 1.0f
+                val dy = offsetY - scroller.currY * 1.0f
+                updateTranslate(dx, dy)
                 postOnAnimation(this)
             }
         }
