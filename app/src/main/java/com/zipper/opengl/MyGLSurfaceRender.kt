@@ -162,12 +162,12 @@ class MyGLSurfaceRender(private val context: Context) : GLSurfaceView.Renderer {
         this.viewRect.set(0f, 0f, width.toFloat(), height.toFloat())
         this.viewRatio = width / height.toFloat()
         GLES20.glViewport(0, 0, width, height)
-//        MatrixUtil.handleOrthoM(matrix, width, height)
+        MatrixUtil.handleOrthoM(matrix, width, height)
 //        MatrixUtil.handleOrthoM(projectMatrix, width, height)
 //        Matrix.setIdentityM(modelMatrix, 0)
-        val aspectRatio = attr.width.toFloat() / attr.height
-        Matrix.frustumM(projectMatrix, 0, -aspectRatio, aspectRatio, -1f, 1f, 3f, 7f)
-        Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, 5f, 0f, 0f, 0f, 0f, 1f, 0f)
+//        val aspectRatio = attr.width.toFloat() / attr.height
+//        Matrix.frustumM(projectMatrix, 0, -aspectRatio, aspectRatio, -1f, 1f, 3f, 7f)
+//        Matrix.setLookAtM(viewMatrix, 0, 0f, 0f, 5f, 0f, 0f, 0f, 0f, 1f, 0f)
     }
 
     private var isDrawBackground = true
@@ -188,12 +188,6 @@ class MyGLSurfaceRender(private val context: Context) : GLSurfaceView.Renderer {
 //        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
 //        textureFilter.draw(matrix, offscreenBufferHelper.getTextureId())
 //        lineFilter.draw(matrix)
-
-        Matrix.setIdentityM(modelMatrix, 0);
-        Matrix.translateM(modelMatrix, 0, textureX, textureY, 0f);
-
-        Matrix.multiplyMM(mvpMatrix, 0, viewMatrix, 0, modelMatrix, 0);
-        Matrix.multiplyMM(mvpMatrix, 0, projectMatrix, 0, mvpMatrix, 0);
         lineFilter.draw(mvpMatrix)
     }
 
