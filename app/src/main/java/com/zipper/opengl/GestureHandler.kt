@@ -105,16 +105,19 @@ class GestureHandler(
     }
 
     private fun requestRender() {
-        val fraction = currentScale - minScale / maxScale - minScale
+        val fraction = currentScale - minScale / maxScale - currentScale
+
+        Log.w("BAAA", "Render offsetX = ${ offsetX} offsetY = ${offsetY}")
+        Log.w("BAAA", "Render offsetXRatio = ${ offsetX/ currentScale} offsetYRatio = ${offsetY / currentScale}")
         graphicsMatrix.reset()
-        graphicsMatrix.postTranslate(offsetX, offsetY)
+        graphicsMatrix.postTranslate(offsetX / currentScale, offsetY / currentScale)
         graphicsMatrix.postScale(currentScale, currentScale, scaleFocusX, scaleFocusY)
         graphicsMatrix.getValues(graphicsMatrixArray)
 //        invertMatrix.reset()
 //        invertMatrix.setValues(graphicsMatrixArray)
 //        val invertMatrixArr = FloatArray(9)
 //        invertMatrix.getValues(invertMatrixArr)
-        Log.w("BAAA", "Render graphicsMatrixArray = ${graphicsMatrixArray.contentToString()}")
+
 //        Log.w("BAAA", "Render invertMatrix = ${invertMatrixArr.contentToString()}")
         renderView.requestRender(graphicsMatrixArray)
     }
@@ -164,13 +167,13 @@ class GestureHandler(
         distanceY: Float,
     ): Boolean {
         cancelAnimation(flingRunnable)
-        Log.e("EventState", "Gesture onScroll 滑动 currentScale = ${graphicsMatrixArray.contentToString()} - $currentScale")
+        Log.e("EventState", "Gesture onScroll 滑动 distanceX = $distanceX distanceY = $distanceY")
         updateTranslate(distanceX, distanceY)
         return false
     }
 
     private fun setTranslate() {
-        Log.d("BAAA", "maxX = ${getMaxX()} minX = ${getMinX()} maxY = ${getMaxY()} minY = ${getMinY()}")
+//        Log.d("BAAA", "maxX = ${getMaxX()} minX = ${getMinX()} maxY = ${getMaxY()} minY = ${getMinY()}")
         val fraction = currentScale - minScale / maxScale - minScale
         offsetX = min(offsetX, getMaxX())
         offsetX = max(offsetX, getMinX())
@@ -230,7 +233,7 @@ class GestureHandler(
         val maxX = getMaxX().toInt()
         val minY = getMinY().toInt()
         val maxY = getMaxY().toInt()
-//        Log.e("EventState", "Gesture onFling 滑动 minX = $minX maxX = $maxX minY = $minY maxY = $maxY offsetX = $offsetX offsetY = $offsetY")
+        Log.e("EventState", "Gesture onFling 滑动 minX = $minX maxX = $maxX minY = $minY maxY = $maxY offsetX = $offsetX offsetY = $offsetY")
         scroller.fling(
             offsetX.toInt(), offsetY.toInt(),
             velocityX.toInt(), velocityY.toInt(),
@@ -243,10 +246,9 @@ class GestureHandler(
     }
 
     fun updateTranslate(distanceX: Float, distanceY: Float) {
-        val fraction = currentScale - minScale / maxScale - minScale
+
         offsetX -= distanceX
         offsetY -= distanceY
-        Log.d("BAAAA", "====================== fracttion = $fraction")
 
         setTranslate()
         requestRender()

@@ -175,6 +175,7 @@ class MyGLSurfaceRender(private val context: Context) : GLSurfaceView.Renderer {
     override fun onDrawFrame(gl: GL10?) {
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
+//        Log.d("BAAA", "onDrawFrame")
         backgroundFilter.drawBackground()
 //        if (isDrawBackground) {
 //            isDrawBackground = false

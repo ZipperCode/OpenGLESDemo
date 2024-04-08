@@ -113,7 +113,7 @@ object OpenGLHelper {
         return textureId
     }
 
-    fun createTexture(width: Int, height: Int): Int {
+    fun createFBOTexture(width: Int, height: Int): Int {
         val arr = IntArray(1)
         // 创建纹理
         GLES20.glGenTextures(1, arr, 0)

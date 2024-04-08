@@ -17,11 +17,11 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-        findViewById<GLSurfaceView>(R.id.glSurfaceView).apply {
-            setEGLContextClientVersion(2)
-            setEGLConfigChooser(false)
-            setRenderer(MyGLRender(this@MainActivity))
-            renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
-        }
+//        findViewById<GLSurfaceView>(R.id.glSurfaceView).apply {
+//            setEGLContextClientVersion(2)
+//            setEGLConfigChooser(false)
+//            setRenderer(MyGLRender(this@MainActivity))
+//            renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
+//        }
     }
 }

@@ -1,7 +1,9 @@
-package com.zipper.gldemo2
+package com.zipper.gldemo2.shader
 
 import android.content.Context
 import android.opengl.GLES20
+import com.zipper.gldemo2.AssetsUtil
+import com.zipper.gldemo2.OpenGLHelper
 
 class LineShader(
     private val context: Context
@@ -11,6 +13,8 @@ class LineShader(
     private var textureLocation = -1
 
     private var lineTextureId: Int = -1
+
+    private var matrixLocation = -1
 
     fun onSurfaceCreate() {
         programHandle[0] = OpenGLHelper.createProgram(getVertexShaderCode(), getFragmentShaderCode())
@@ -22,10 +26,15 @@ class LineShader(
         val bitmap = AssetsUtil.decodeBitmapFromAssets(context, "903388/svg2png.png")
         lineTextureId = OpenGLHelper.createTexTexture(bitmap)
         bitmap?.recycle()
+
+        matrixLocation = getUniformLocation("uMatrix")
     }
 
-    fun onDrawFrame() {
+    fun onDrawFrame(matrix: FloatArray) {
         GLES20.glUseProgram(programHandle[0])
+
+        GLES20.glUniformMatrix4fv(matrixLocation, 1, false, matrix, 0)
+
         enablePositionVertex()
         enableCoordinateVertex()
 

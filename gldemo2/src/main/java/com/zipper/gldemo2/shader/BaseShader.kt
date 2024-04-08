@@ -1,6 +1,7 @@
-package com.zipper.gldemo2
+package com.zipper.gldemo2.shader
 
 import android.opengl.GLES20
+import com.zipper.gldemo2.OpenGLHelper
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -37,6 +38,12 @@ abstract class BaseShader {
                 put(arr)
                 position(0)
             }
+    }
+
+    protected fun initProgram() {
+        programHandle[0] = OpenGLHelper.createProgram(getVertexShaderCode(), getFragmentShaderCode())
+        positionLocation = getAttribLocation("aPosition")
+        coordinateLocation = getAttribLocation("aCoordinate")
     }
 
     protected fun getAttribLocation(name: String): Int {

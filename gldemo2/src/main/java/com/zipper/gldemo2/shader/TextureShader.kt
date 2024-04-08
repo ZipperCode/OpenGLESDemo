@@ -1,6 +1,7 @@
-package com.zipper.gldemo2
+package com.zipper.gldemo2.shader
 
 import android.opengl.GLES20
+import com.zipper.gldemo2.OpenGLHelper
 
 class TextureShader: BaseShader() {
 

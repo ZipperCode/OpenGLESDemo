@@ -11,9 +11,8 @@ import android.widget.Scroller
  * @author zhangzhipeng
  * @date 2024/4/3
  */
-class DragScroller(context: Context) : OverScroller(context, LinearInterpolator()) {
+class DragScroller(context: Context) : OverScroller(context) {
     init {
-        currVelocity
-        setFriction(ViewConfiguration.getScrollFriction() * 100)
+        setFriction(ViewConfiguration.getScrollFriction() * 2)
     }
 }
