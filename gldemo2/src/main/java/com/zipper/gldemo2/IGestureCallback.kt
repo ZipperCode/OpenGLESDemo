@@ -9,8 +9,6 @@ import android.content.Context
  */
 interface IGestureCallback {
 
-    fun requireContext(): Context
-
 
     fun onSingleTapUp(x: Float, y: Float)
 
@@ -18,5 +16,13 @@ interface IGestureCallback {
      * 滚动时
      */
     fun onScroll(distanceX: Float, distanceY: Float)
+
+    fun onScaleStart(scale: Float, focusX: Float, focusY: Float)
+
+    fun onScale(scale: Float, focusX: Float, focusY: Float)
+
+    fun runTaskOnMain(runnable: Runnable)
+
+    fun cancelTaskOnMain(runnable: Runnable)
 
 }

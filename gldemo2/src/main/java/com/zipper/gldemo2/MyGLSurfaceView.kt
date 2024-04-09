@@ -5,14 +5,13 @@ import android.content.Context
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.util.Log
-import android.view.GestureDetector
 import android.view.MotionEvent
 
-class MyGLSurfaceView(context: Context, attrs: AttributeSet?) : GLSurfaceView(context, attrs) {
+class MyGLSurfaceView(context: Context, attrs: AttributeSet?) : GLSurfaceView(context, attrs), IGestureCallback {
 
     private val render = MyGLRender(context)
 
-    private val gestureDetector = GestureDetector(context, MyGestureListener())
+    private val gestureHandler = GestureHandler(context, this)
 
     init {
         setEGLContextClientVersion(2)
@@ -23,20 +22,48 @@ class MyGLSurfaceView(context: Context, attrs: AttributeSet?) : GLSurfaceView(co
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        return gestureDetector.onTouchEvent(event) || super.onTouchEvent(event)
+        gestureHandler.onTouchEvent(event)
+        return true
     }
 
-    inner class MyGestureListener : GestureDetector.SimpleOnGestureListener() {
-        override fun onDown(e: MotionEvent): Boolean {
-            val x = e.x
-            val y = e.y
 
-            queueEvent {
-                render.onClick(x, y)
-                requestRender()
-            }
-            return super.onDown(e)
+    override fun onSingleTapUp(x: Float, y: Float) {
+        queueEvent {
+
         }
+        render.onSingleTapUp(x, y)
+        requestRender()
+    }
+
+    override fun onScroll(distanceX: Float, distanceY: Float) {
+        queueEvent {
+
+        }
+        this.render.onScroll(distanceX / width, distanceY / height)
+        requestRender()
+    }
+
+    override fun onScaleStart(scale: Float, focusX: Float, focusY: Float) {
+        queueEvent {
+
+        }
+        this.render.onScaleStart(scale, focusX, focusY)
+    }
+
+    override fun onScale(scale: Float, focusX: Float, focusY: Float) {
+        queueEvent {
+
+        }
+        this.render.onScale(scale)
+        requestRender()
+    }
+
+    override fun runTaskOnMain(runnable: Runnable) {
+        postOnAnimation(runnable)
+    }
+
+    override fun cancelTaskOnMain(runnable: Runnable) {
+        removeCallbacks(runnable)
     }
 
 }

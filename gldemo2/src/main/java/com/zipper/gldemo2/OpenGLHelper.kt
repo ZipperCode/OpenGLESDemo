@@ -157,14 +157,14 @@ object OpenGLHelper {
      * 加减去 0.5表示将坐标调整到中心，并乘以2，实现 -1, 1 的坐标系转变
      */
     fun convertGlVertex(offsetXRatio: Float, offsetYRatio: Float): FloatArray {
-        return floatArrayOf(offsetXRatio - 0.5f * 2f, -offsetYRatio + 0.5f * 2f)
+        return floatArrayOf((offsetXRatio - 0.5f) * 2f, (-offsetYRatio + 0.5f) * 2f)
     }
 
     fun convertGlXVertex(offsetXRatio: Float): Float {
-        return offsetXRatio - 0.5f * 2f
+        return (offsetXRatio - 0.5f) * 2f
     }
 
     fun convertedGlYVertex(offsetYRatio: Float): Float {
-        return -offsetYRatio + 0.5f * 2f
+        return -(offsetYRatio + 0.5f) * 2f
     }
 }
