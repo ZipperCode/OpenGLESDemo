@@ -9,6 +9,7 @@ import android.opengl.GLSurfaceView
 import android.opengl.Matrix
 import android.util.Log
 import com.sinyee.babybus.kidscolor.egl.FrameBuffer
+import com.zipper.gldemo2.shader.BackgroundShader
 import com.zipper.gldemo2.shader.ColoringShader
 import com.zipper.gldemo2.shader.LineShader
 import com.zipper.gldemo2.shader.TextureShader
@@ -28,6 +29,8 @@ class MyGLRender(
 
     private val lineShader = LineShader(context)
 
+    private val backgroundShader = BackgroundShader()
+
     private val frameBuffer = FrameBuffer()
 
 
@@ -37,8 +40,6 @@ class MyGLRender(
     private var colorStack = DrawColorStack()
 
     private var maskBitmap: Bitmap? = null
-
-//    private val mvpMatrix = FloatArray(16)
 
     private val identityMatrix = floatArrayOf(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f)
 
@@ -183,6 +184,7 @@ class MyGLRender(
         textureShader.onSurfaceCreate()
 
         coloringShader.onSurfaceCreate()
+        backgroundShader.onSurfaceCreate()
 
         GLES20.glClearColor(1.0f, 1.0f, 0.0f, 1.0f)
     }
@@ -199,9 +201,9 @@ class MyGLRender(
     override fun onDrawFrame(gl: GL10?) {
         GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
-
+        backgroundShader.onDrawFrame(Color.RED, identityMatrix)
         initMatrix()
-
+        backgroundShader.onDrawFrame(Color.WHITE, mvpMatrix)
         GLES20.glEnable(GLES20.GL_BLEND)
         GLES20.glBlendFunc(GLES20.GL_SRC_ALPHA, GLES20.GL_ONE_MINUS_SRC_ALPHA)
         for (paintRecord in colorStack) {
@@ -211,8 +213,6 @@ class MyGLRender(
     }
 
     private fun initMatrix() {
-//        this.matrixState.translateM(0.1f, 0.1f, 0f)
-//        this.matrixState.scaleM(-0.1f, 0.1f,0.0f)
         this.matrixState.pushStack()
         this.matrixState.scaleM(this.glScale, this.glScale, this.glScale)
         this.matrixState.translateM(this.glOffsetX, this.glOffsetY, 0f)

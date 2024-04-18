@@ -29,33 +29,31 @@ class MyGLSurfaceView(context: Context, attrs: AttributeSet?) : GLSurfaceView(co
 
     override fun onSingleTapUp(x: Float, y: Float) {
         queueEvent {
-
+            render.onSingleTapUp(x, y)
+            requestRender()
         }
-        render.onSingleTapUp(x, y)
-        requestRender()
+
     }
 
     override fun onScroll(distanceX: Float, distanceY: Float) {
         queueEvent {
-
+            this.render.onScroll(distanceX / width, distanceY / height)
+            requestRender()
         }
-        this.render.onScroll(distanceX / width, distanceY / height)
-        requestRender()
+
     }
 
     override fun onScaleStart(scale: Float, focusX: Float, focusY: Float) {
         queueEvent {
-
+            this.render.onScaleStart(scale, focusX, focusY)
         }
-        this.render.onScaleStart(scale, focusX, focusY)
     }
 
     override fun onScale(scale: Float, focusX: Float, focusY: Float) {
         queueEvent {
-
+            this.render.onScale(scale)
+            requestRender()
         }
-        this.render.onScale(scale)
-        requestRender()
     }
 
     override fun runTaskOnMain(runnable: Runnable) {
