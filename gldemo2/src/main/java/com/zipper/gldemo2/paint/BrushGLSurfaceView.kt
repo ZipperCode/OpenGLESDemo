@@ -7,7 +7,7 @@ import android.view.MotionEvent
 
 class BrushGLSurfaceView(context: Context?, attrs: AttributeSet?) : GLSurfaceView(context, attrs) {
 
-    private val renderer = BrushRenderer(this)
+    val renderer = BrushRenderer(this)
     private val eventPoint = BrushPoint()
 
     init {

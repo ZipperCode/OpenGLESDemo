@@ -17,7 +17,6 @@ import java.nio.IntBuffer
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 
-
 class BrushRenderer(
     private val mBrushView: BrushGLSurfaceView
 ) : Renderer {
@@ -36,7 +35,6 @@ class BrushRenderer(
     private var brushTexLocation = 0
     private var pointSizeLocation = 0
     private var selectColorLocation = 0
-
 
     private var paintFrameBuffer = Framebuffer()
 
@@ -83,6 +81,21 @@ class BrushRenderer(
         brushPen.penColor = color
     }
 
+    fun setPenColor(color: Int) {
+        brushPen.penColor = color
+    }
+
+    /**
+     * 设置颜色混合比例
+     * @param ratio 混合比例，范围0-1
+     *              0表示完全使用历史颜色
+     *              1表示完全使用新绘制的颜色
+     *              0.5表示两种颜色均匀混合
+     */
+    fun setMixRatio(ratio: Float) {
+        mixShader.setMixRatio(ratio)
+    }
+
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         val vert = AssetsUtil.getAssetsContent(mBrushView.context, "gles/brush.vert")
         val frag = AssetsUtil.getAssetsContent(mBrushView.context, "gles/brush.frag")
@@ -99,7 +112,6 @@ class BrushRenderer(
         brushTexLocation = GLES20.glGetUniformLocation(program, "uTexture")
         textureShader.onSurfaceCreate()
         mixShader.onSurfaceCreate()
-
 
         brushTextureId = OpenGLHelper.createTexTexture(
                 BitmapFactory.decodeResource(mBrushView.context.resources, R.drawable.brush_paint_normal_128))
@@ -127,26 +139,27 @@ class BrushRenderer(
     override fun onDrawFrame(gl: GL10?) {
         GLES20.glClearColor(1f, 1f, 1f, 1.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+        
         val paintFrameTextureId = paintFrameBuffer.getTextureId()
         val resultFrameTextureId = resultFrameBuffer.getTextureId()
         val cacheFrameTextureId = cacheFrameBuffer.getTextureId()
+        
+        // 1. 先将当前的绘制内容渲染到 paintFrameBuffer
         vertexBuffer?.run {
-            // 画笔绘制的内容
             paintFrameBuffer.withFrame {
                 GLES20.glUseProgram(program)
                 GLES20.glUniform1f(pointSizeLocation, brushPen.pointSize)
                 OpenGLHelper.convertColor(brushPen.penColor, selectColorArr)
                 GLES20.glUniform4fv(selectColorLocation, 1, selectColorArr, 0)
 
-                // 绑定纹理
-                GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+                GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
                 GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, brushTextureId)
                 GLES20.glUniform1i(brushTexLocation, 0)
 
+                // 启用混合
                 GLES20.glEnable(GLES20.GL_BLEND)
-                // 源颜色使用本身，目标颜色取决于源颜色的透明度
-//                glBlendFunc(GL_ONE, GL_ONE)
-                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
+                // 使用预乘alpha的混合模式
+                GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
 
                 GLES20.glVertexAttribPointer(positionLocation, 2, GLES20.GL_FLOAT, true, 0, vertexBuffer)
                 GLES20.glEnableVertexAttribArray(positionLocation)
@@ -156,35 +169,64 @@ class BrushRenderer(
             vertexBuffer = null
         }
 
-        // 保存结果
+        // 2. 当一笔结束时，将结果保存到缓存中
         cacheFrameVertexBuffer?.let {
+            // 将当前绘制的内容(paintFrameBuffer)与历史内容(cacheFrameBuffer)混合
+            resultFrameBuffer.withFrame {
+                // 启用混合
+                GLES20.glEnable(GLES20.GL_BLEND)
+                // 使用预乘alpha的混合模式
+                GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+                
+                mixShader.onDrawFrame(cacheFrameTextureId, paintFrameTextureId)
+                
+                GLES20.glDisable(GLES20.GL_BLEND)
+            }
+            // 将混合结果保存到缓存中
             cacheFrameBuffer.withFrame {
                 textureShader.onDrawFrame(resultFrameTextureId)
-                hasCachedFrame = true
             }
+            // 清空当前绘制缓冲区
+            paintFrameBuffer.withFrame {
+                GLES20.glClearColor(0f, 0f, 0f, 0f)
+                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+            }
+            hasCachedFrame = true
             cacheFrameVertexBuffer = null
         }
 
+        // 3. 渲染最终画面
         if (hasCachedFrame) {
-//            var bitmap1: Bitmap? = null
-//            var bitmap2: Bitmap? = null
-//            cacheFrameBuffer.withFrame {
-//                bitmap1 = frameBufferToBitmap()
-//            }
-//            paintFrameBuffer.withFrame {
-//                bitmap2 = frameBufferToBitmap()
-//            }
-            resultFrameBuffer.withFrame {
-                mixShader.onDrawFrame(cacheFrameTextureId, paintFrameTextureId)
+            // 如果当前有新的绘制内容，则需要与历史内容混合
+            if (vertexCount > 0) {
+                resultFrameBuffer.withFrame {
+                    // 启用混合
+                    GLES20.glEnable(GLES20.GL_BLEND)
+                    // 使用预乘alpha的混合模式
+                    GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
+                    
+                    mixShader.onDrawFrame(cacheFrameTextureId, paintFrameTextureId)
+                    
+                    GLES20.glDisable(GLES20.GL_BLEND)
+                }
+            } else {
+                // 否则直接显示历史内容
+                resultFrameBuffer.withFrame {
+                    textureShader.onDrawFrame(cacheFrameTextureId)
+                }
             }
         } else {
+            // 第一次绘制，直接显示当前绘制内容
             resultFrameBuffer.withFrame {
                 textureShader.onDrawFrame(paintFrameTextureId)
             }
         }
 
+        // 4. 显示到屏幕
+        GLES20.glEnable(GLES20.GL_BLEND)
+        GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
         textureShader.onDrawFrame(resultFrameTextureId)
-
+        GLES20.glDisable(GLES20.GL_BLEND)
     }
 
     private fun frameBufferToBitmap(): Bitmap {
@@ -198,7 +240,4 @@ class BrushRenderer(
 
         return bitmap
     }
-
-
-
 }

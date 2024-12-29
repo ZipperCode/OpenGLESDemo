@@ -73,20 +73,21 @@ object OpenGLHelper {
         val textureId = texture[0]
         // 绑定纹理id
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textureId)
+        
         // 设置纹理参数
-
-        // 设置最小过滤器 为 最近采样： 使用纹理坐标最接近的颜色作为需要绘制的颜色
-        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST.toFloat())
-        // 设置最大功过滤器 为 线性采样器：使用纹理坐标 附近的若干个颜色，加权平均 得到需要绘制的颜色
-        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR.toFloat())
-
-        // 设置环绕方向S，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
-        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE.toFloat())
-        // 设置环绕方向T，截取纹理坐标到[1/2n,1-1/2n]。将导致永远不会与border融合
-        GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE.toFloat())
-        // 根据以上指定的参数，生成一个2D纹理
+        // 使用线性过滤，并开启mipmap
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_LINEAR_MIPMAP_LINEAR)
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR)
+        
+        // 设置环绕方式为CLAMP，防止边缘重复
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_CLAMP_TO_EDGE)
+        GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_CLAMP_TO_EDGE)
+        
+        // 生成2D纹理
         GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
-
+        // 生成mipmap
+        GLES20.glGenerateMipmap(GLES20.GL_TEXTURE_2D)
+        
         return textureId
     }
 
@@ -182,13 +183,6 @@ object OpenGLHelper {
     }
 
     fun convertColor(color: Int, colorArr: FloatArray) {
-        if (color == Color.BLACK) {
-            colorArr[0] = -0.39215687f
-            colorArr[1] = -0.39215687f
-            colorArr[2] = -0.39215687f
-            colorArr[3] = 1.0f
-            return
-        }
         colorArr[0] = Color.red(color) / 255.0f
         colorArr[1] = Color.green(color) / 255.0f
         colorArr[2] = Color.blue(color) / 255.0f
