@@ -11,7 +11,7 @@ class FrameBuffer {
     private val frameBufferHandle = IntArray(1)
 
 
-    fun initFrameBuffer(width: Int, height: Int) {
+    fun init(width: Int, height: Int) {
         if (textureId[0] > 0) {
             // 绑定到默认纹理，好删除旧纹理
             GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
@@ -47,5 +47,11 @@ class FrameBuffer {
 
     fun getTextureId(): Int {
         return textureId[0]
+    }
+
+    fun withFrame(block: () -> Unit) {
+        bindFrameBuffer()
+        block()
+        unbindFrameBuffer()
     }
 }
