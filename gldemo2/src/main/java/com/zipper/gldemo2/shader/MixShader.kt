@@ -13,7 +13,9 @@ class MixShader(
     private var paintTexLocation = 0
 
     fun onSurfaceCreate() {
-        initProgram()
+        programHandle[0] = OpenGLHelper.createProgram(getVertexShaderCode(), getFragmentShaderCode())
+        positionLocation = getAttribLocation("aPosition")
+        coordinateLocation = getAttribLocation("aCoordinate")
         baseTexLocation = getUniformLocation("uBaseTexture")
         paintTexLocation = getUniformLocation("uPaintTexture")
     }
@@ -32,6 +34,11 @@ class MixShader(
         GLES20.glUniform1i(paintTexLocation, 1)
 
         GLES20.glDrawArrays(GLES20.GL_TRIANGLE_STRIP, 0, 4)
+
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE0)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
+        GLES20.glActiveTexture(GLES20.GL_TEXTURE1)
+        GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
 
         disablePositionVertex()
         disableCoordinateVertex()

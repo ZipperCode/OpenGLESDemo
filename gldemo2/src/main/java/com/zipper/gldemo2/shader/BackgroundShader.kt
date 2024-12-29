@@ -11,7 +11,6 @@ import com.zipper.gldemo2.OpenGLHelper
 class BackgroundShader : BaseShader() {
 
     private var colorLocation = -1
-    private var matrixLocation = -1
 
     private val colorArr = floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f)
 

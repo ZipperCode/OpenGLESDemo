@@ -79,7 +79,7 @@ class BrushPen(
             return
         }
         paintPoints.addAll(movePoints)
-        brushRenderer.drawPoints(paintPoints)
+        brushRenderer.drawPoints(movePoints)
         movePoints.clear()
 
         fromPoint.set(toPoint)

@@ -17,7 +17,6 @@ class ColoringShader(
     private var selectColorLocation = -1
     private var selectMaskColorLocation = -1
 
-    private var matrixLocation = -1
     private var selectColorArr = FloatArray(4)
     private var selectMaskColorArr = FloatArray(4)
 

@@ -37,6 +37,9 @@ class BrushRenderer(
     private var pointSizeLocation = 0
     private var selectColorLocation = 0
 
+
+    private var paintFrameBuffer = Framebuffer()
+
     private var baseFrameBuffer = Framebuffer()
     private var mixColorFrameBuffer = Framebuffer()
     private var resultFrameBuffer = Framebuffer()
@@ -50,6 +53,7 @@ class BrushRenderer(
 
     private val selectColorArr: FloatArray = floatArrayOf(0.0f, 0.0f, 0.0f, 1.0f)
 
+    private var hasCachedFrame = false
 
     fun onActionDown(eventPoint: BrushPoint) {
         brushPen.onActionDown(eventPoint)
@@ -117,19 +121,18 @@ class BrushRenderer(
         baseFrameBuffer.init(width, height)
         mixColorFrameBuffer.init(width, height)
         cacheFrameBuffer.init(width, height)
+        paintFrameBuffer.init(width, height)
     }
 
     override fun onDrawFrame(gl: GL10?) {
         GLES20.glClearColor(1f, 1f, 1f, 1.0f)
-        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
-        val frameTextureId = resultFrameBuffer.getTextureId()
-        val baseFrameTextureId = baseFrameBuffer.getTextureId()
-        val mixFrameTextureId = mixColorFrameBuffer.getTextureId()
+        GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
+        val paintFrameTextureId = paintFrameBuffer.getTextureId()
+        val resultFrameTextureId = resultFrameBuffer.getTextureId()
+        val cacheFrameTextureId = cacheFrameBuffer.getTextureId()
         vertexBuffer?.run {
-            // 绘制点
-            mixColorFrameBuffer.withFrame {
-                GLES20.glClearColor(0f, 0f, 0f, 0f)
-                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
+            // 画笔绘制的内容
+            paintFrameBuffer.withFrame {
                 GLES20.glUseProgram(program)
                 GLES20.glUniform1f(pointSizeLocation, brushPen.pointSize)
                 OpenGLHelper.convertColor(brushPen.penColor, selectColorArr)
@@ -142,60 +145,45 @@ class BrushRenderer(
 
                 GLES20.glEnable(GLES20.GL_BLEND)
                 // 源颜色使用本身，目标颜色取决于源颜色的透明度
-                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
+//                glBlendFunc(GL_ONE, GL_ONE)
+                glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 
                 GLES20.glVertexAttribPointer(positionLocation, 2, GLES20.GL_FLOAT, true, 0, vertexBuffer)
                 GLES20.glEnableVertexAttribArray(positionLocation)
                 GLES20.glDrawArrays(GLES20.GL_POINTS, 0, vertexCount)
                 GLES20.glDisable(GLES20.GL_BLEND)
             }
-            // 底色
-            resultFrameBuffer.withFrame {
-                mixShader.onDrawFrame(baseFrameTextureId, mixFrameTextureId)
-            }
-            baseFrameBuffer.withFrame {
-                textureShader.onDrawFrame(frameTextureId)
-            }
             vertexBuffer = null
         }
 
-        textureShader.onDrawFrame(frameTextureId)
+        // 保存结果
+        cacheFrameVertexBuffer?.let {
+            cacheFrameBuffer.withFrame {
+                textureShader.onDrawFrame(resultFrameTextureId)
+                hasCachedFrame = true
+            }
+            cacheFrameVertexBuffer = null
+        }
 
-//        cacheFrameVertexBuffer?.let {
-//            mixColorFrameBuffer.withFrame {
-//                GLES20.glClearColor(0f, 0f, 0f, 0f)
-//                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT);
-//                GLES20.glUseProgram(program)
-//                GLES20.glUniform1f(pointSizeLocation, brushPen.pointSize)
-//                OpenGLHelper.convertColor(brushPen.penColor, selectColorArr)
-//                GLES20.glUniform4fv(selectColorLocation, 1, selectColorArr, 0)
-//
-//                // 绑定纹理
-//                GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-//                GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, brushTextureId)
-//                GLES20.glUniform1i(brushTexLocation, 0)
-//
-//                GLES20.glEnable(GLES20.GL_BLEND)
-//                // 源颜色使用本身，目标颜色取决于源颜色的透明度
-//                glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA)
-//
-//                GLES20.glVertexAttribPointer(positionLocation, 2, GLES20.GL_FLOAT, true, 0, cacheFrameVertexBuffer)
-//                GLES20.glEnableVertexAttribArray(positionLocation)
-//                GLES20.glDrawArrays(GLES20.GL_POINTS, 0, cacheFrameVertexCount)
-//                GLES20.glDisable(GLES20.GL_BLEND)
+        if (hasCachedFrame) {
+//            var bitmap1: Bitmap? = null
+//            var bitmap2: Bitmap? = null
+//            cacheFrameBuffer.withFrame {
+//                bitmap1 = frameBufferToBitmap()
 //            }
-//            resultFrameBuffer.withFrame {
-//                mixShader.onDrawFrame(baseFrameTextureId, mixFrameTextureId)
+//            paintFrameBuffer.withFrame {
+//                bitmap2 = frameBufferToBitmap()
 //            }
-//
-//            // 绘制完成，结果色为基色
-//            baseFrameBuffer.withFrame {
-//                textureShader.onDrawFrame(frameTextureId)
-//            }
-//            cacheFrameVertexBuffer = null
-//        }
+            resultFrameBuffer.withFrame {
+                mixShader.onDrawFrame(cacheFrameTextureId, paintFrameTextureId)
+            }
+        } else {
+            resultFrameBuffer.withFrame {
+                textureShader.onDrawFrame(paintFrameTextureId)
+            }
+        }
 
-
+        textureShader.onDrawFrame(resultFrameTextureId)
 
     }
 

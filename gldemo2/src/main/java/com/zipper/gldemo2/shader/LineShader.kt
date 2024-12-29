@@ -14,8 +14,6 @@ class LineShader(
 
     private var lineTextureId: Int = -1
 
-    private var matrixLocation = -1
-
     fun onSurfaceCreate() {
         programHandle[0] = OpenGLHelper.createProgram(getVertexShaderCode(), getFragmentShaderCode())
 

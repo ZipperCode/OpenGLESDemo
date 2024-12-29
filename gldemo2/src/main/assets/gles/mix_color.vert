@@ -2,8 +2,8 @@ precision highp float;
 attribute vec4 aPosition;
 attribute vec2 aCoordinate;
 
-varying vec2 vTexCoord;
+varying vec2 vTexCoordinate;
 void main() {
     gl_Position = aPosition;
-    vTexCoord = vec2(aCoordinate.x, 1.0 - aCoordinate.y);
+    vTexCoordinate = vec2(aCoordinate.x, 1.0 - aCoordinate.y);
 }
