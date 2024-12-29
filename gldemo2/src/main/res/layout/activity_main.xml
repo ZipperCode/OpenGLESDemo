@@ -78,5 +78,27 @@
 
     </com.google.android.material.card.MaterialCardView>
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="16dp"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <Button
+            android:id="@+id/btn_selection_mode"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="选区模式"
+            android:layout_marginEnd="16dp"/>
+
+        <Button
+            android:id="@+id/btn_save_selection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="保存选区"/>
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

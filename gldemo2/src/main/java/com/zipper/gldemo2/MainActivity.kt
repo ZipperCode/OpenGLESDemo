@@ -13,6 +13,7 @@ import com.google.android.material.color.MaterialColors
 import com.skydoves.colorpickerview.ColorPickerDialog
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
 import com.zipper.gldemo2.databinding.ActivityMainBinding
+import com.zipper.gldemo2.dialog.PreviewDialog
 import com.zipper.gldemo2.paint.BrushGLSurfaceView
 
 class MainActivity : AppCompatActivity() {
@@ -34,6 +35,7 @@ class MainActivity : AppCompatActivity() {
 
         setupColorPicker()
         setupMixRatioControl()
+        setupSelectionButtons()
     }
 
     private fun setupColorPicker() {
@@ -71,6 +73,28 @@ class MainActivity : AppCompatActivity() {
             override fun onStartTrackingTouch(seekBar: SeekBar?) {}
             override fun onStopTrackingTouch(seekBar: SeekBar?) {}
         })
+    }
+
+    private fun setupSelectionButtons() {
+        var isSelectionMode = false
+
+        // 选区模式按钮
+        binding.btnSelectionMode.setOnClickListener {
+            isSelectionMode = !isSelectionMode
+            binding.btnSelectionMode.text = if (isSelectionMode) "退出选区" else "选区模式"
+            binding.glSurfaceView.setSelectionMode(isSelectionMode)
+            binding.btnSaveSelection.isEnabled = isSelectionMode
+        }
+
+        // 保存选区按钮
+        binding.btnSaveSelection.apply {
+            isEnabled = false
+            setOnClickListener {
+                binding.glSurfaceView.getSelectionContent()?.let { bitmap ->
+                    PreviewDialog.show(this@MainActivity, bitmap)
+                }
+            }
+        }
     }
 
     private fun updateColorPreview(color: Int) {

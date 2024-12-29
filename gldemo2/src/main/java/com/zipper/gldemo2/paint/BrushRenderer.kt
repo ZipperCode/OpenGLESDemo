@@ -2,6 +2,8 @@ package com.zipper.gldemo2.paint
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import android.graphics.Matrix
+import android.graphics.RectF
 import android.opengl.GLES20
 import android.opengl.GLES20.*
 import android.opengl.GLSurfaceView.Renderer
@@ -37,11 +39,9 @@ class BrushRenderer(
     private var selectColorLocation = 0
 
     private var paintFrameBuffer = Framebuffer()
-
     private var baseFrameBuffer = Framebuffer()
     private var mixColorFrameBuffer = Framebuffer()
     private var resultFrameBuffer = Framebuffer()
-
     private val cacheFrameBuffer = Framebuffer()
 
     private val textureShader = TextureShader()
@@ -50,90 +50,46 @@ class BrushRenderer(
     private val mixShader = MixShader(mBrushView.context)
 
     private val selectColorArr: FloatArray = floatArrayOf(0.0f, 0.0f, 0.0f, 1.0f)
-
     private var hasCachedFrame = false
 
-    fun onActionDown(eventPoint: BrushPoint) {
-        brushPen.onActionDown(eventPoint)
+    // 用于截图的变量
+    private var needCapture = false
+    private var captureRect: RectF? = null
+    private var captureBitmap: Bitmap? = null
+
+    fun requestCapture(rect: RectF) {
+        needCapture = true
+        captureRect = RectF(rect)
+        // 请求重绘以触发onDrawFrame
+        mBrushView.requestRender()
     }
 
-    fun onActionMove(eventPoint: BrushPoint) {
-        brushPen.onActionMove(eventPoint, surfaceWidth, surfaceHeight)
+    fun getCaptureBitmap(): Bitmap? {
+        val bitmap = captureBitmap
+        captureBitmap = null
+        return bitmap
     }
 
-    fun onActionUp(eventPoint: BrushPoint) {
-        brushPen.onActionUp(eventPoint, surfaceWidth, surfaceHeight)
-    }
+    private fun captureContent(rect: RectF) {
+        val x = rect.left.toInt()
+        val y = surfaceHeight - rect.bottom.toInt()
+        val width = rect.width().toInt()
+        val height = rect.height().toInt()
 
-    fun drawPoints(points: List<Float>) {
-        Log.d("BrushRenderer", "drawPoints count = ${points.size}")
-        vertexBuffer = OpenGLHelper.createFloatBuffer(points.toFloatArray())
-        vertexCount = points.size / 2
-    }
+        val intBuffer = IntBuffer.allocate(width * height)
+        intBuffer.position(0)
 
-    fun saveFrame(points: List<Float>) {
-        Log.d("BrushRenderer", "saveFrame count = ${points.size}")
-        cacheFrameVertexBuffer = OpenGLHelper.createFloatBuffer(points.toFloatArray())
-        cacheFrameVertexCount = points.size / 2
-    }
+        // 读取像素
+        GLES20.glReadPixels(x, y, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, intBuffer)
 
-    fun selectColor(color: Int) {
-        brushPen.penColor = color
-    }
+        // 创建位图
+        val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+        bitmap.copyPixelsFromBuffer(intBuffer)
 
-    fun setPenColor(color: Int) {
-        brushPen.penColor = color
-    }
-
-    /**
-     * 设置颜色混合比例
-     * @param ratio 混合比例，范围0-1
-     *              0表示完全使用历史颜色
-     *              1表示完全使用新绘制的颜色
-     *              0.5表示两种颜色均匀混合
-     */
-    fun setMixRatio(ratio: Float) {
-        mixShader.setMixRatio(ratio)
-    }
-
-    override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
-        val vert = AssetsUtil.getAssetsContent(mBrushView.context, "gles/brush.vert")
-        val frag = AssetsUtil.getAssetsContent(mBrushView.context, "gles/brush.frag")
-        program = OpenGLHelper.createProgram(vert, frag)
-        GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
-
-        positionLocation = GLES20.glGetAttribLocation(program, "aPosition")
-        GLES20.glEnableVertexAttribArray(positionLocation)
-        brushTexCoordLocation = GLES20.glGetAttribLocation(program, "aTexCoord")
-        GLES20.glEnableVertexAttribArray(brushTexCoordLocation)
-        brushTexLocation = GLES20.glGetUniformLocation(program, "uTexture")
-        selectColorLocation = GLES20.glGetUniformLocation(program, "uSelectColor")
-        pointSizeLocation = GLES20.glGetUniformLocation(program, "uPointSize")
-        brushTexLocation = GLES20.glGetUniformLocation(program, "uTexture")
-        textureShader.onSurfaceCreate()
-        mixShader.onSurfaceCreate()
-
-        brushTextureId = OpenGLHelper.createTexTexture(
-                BitmapFactory.decodeResource(mBrushView.context.resources, R.drawable.brush_paint_normal_128))
-
-//        val brushBitmap = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
-//        val canvas = Canvas(brushBitmap)
-//        val paint = Paint().apply {
-//            setColor(ColorUtils.blendARGB(Color.RED, Color.BLUE, 0.5f))
-//        }
-//        canvas.drawCircle(64f, 64f, 64f, paint)
-//        brushTextureId = OpenGLHelper.createTexTexture(brushBitmap)
-    }
-
-    override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
-        surfaceWidth = width
-        surfaceHeight = height
-        GLES20.glViewport(0, 0, width, height)
-        resultFrameBuffer.init(width, height)
-        baseFrameBuffer.init(width, height)
-        mixColorFrameBuffer.init(width, height)
-        cacheFrameBuffer.init(width, height)
-        paintFrameBuffer.init(width, height)
+        // OpenGL的坐标系与Android的坐标系y轴相反，需要垂直翻转
+        val matrix = Matrix()
+        matrix.postScale(1f, -1f)
+        captureBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true)
     }
 
     override fun onDrawFrame(gl: GL10?) {
@@ -227,6 +183,98 @@ class BrushRenderer(
         GLES20.glBlendFunc(GLES20.GL_ONE, GLES20.GL_ONE_MINUS_SRC_ALPHA)
         textureShader.onDrawFrame(resultFrameTextureId)
         GLES20.glDisable(GLES20.GL_BLEND)
+
+        // 5. 如果需要截图，在渲染完成后进行截图
+        if (needCapture) {
+            captureRect?.let { rect ->
+                captureContent(rect)
+            }
+            needCapture = false
+            captureRect = null
+        }
+    }
+
+    override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
+        val vert = AssetsUtil.getAssetsContent(mBrushView.context, "gles/brush.vert")
+        val frag = AssetsUtil.getAssetsContent(mBrushView.context, "gles/brush.frag")
+        program = OpenGLHelper.createProgram(vert, frag)
+        GLES20.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
+
+        positionLocation = GLES20.glGetAttribLocation(program, "aPosition")
+        GLES20.glEnableVertexAttribArray(positionLocation)
+        brushTexCoordLocation = GLES20.glGetAttribLocation(program, "aTexCoord")
+        GLES20.glEnableVertexAttribArray(brushTexCoordLocation)
+        brushTexLocation = GLES20.glGetUniformLocation(program, "uTexture")
+        selectColorLocation = GLES20.glGetUniformLocation(program, "uSelectColor")
+        pointSizeLocation = GLES20.glGetUniformLocation(program, "uPointSize")
+        brushTexLocation = GLES20.glGetUniformLocation(program, "uTexture")
+        textureShader.onSurfaceCreate()
+        mixShader.onSurfaceCreate()
+
+        brushTextureId = OpenGLHelper.createTexTexture(
+                BitmapFactory.decodeResource(mBrushView.context.resources, R.drawable.brush_paint_normal_128))
+
+//        val brushBitmap = Bitmap.createBitmap(128, 128, Bitmap.Config.ARGB_8888)
+//        val canvas = Canvas(brushBitmap)
+//        val paint = Paint().apply {
+//            setColor(ColorUtils.blendARGB(Color.RED, Color.BLUE, 0.5f))
+//        }
+//        canvas.drawCircle(64f, 64f, 64f, paint)
+//        brushTextureId = OpenGLHelper.createTexTexture(brushBitmap)
+    }
+
+    override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
+        surfaceWidth = width
+        surfaceHeight = height
+        GLES20.glViewport(0, 0, width, height)
+        resultFrameBuffer.init(width, height)
+        baseFrameBuffer.init(width, height)
+        mixColorFrameBuffer.init(width, height)
+        cacheFrameBuffer.init(width, height)
+        paintFrameBuffer.init(width, height)
+    }
+
+    fun onActionDown(eventPoint: BrushPoint) {
+        brushPen.onActionDown(eventPoint)
+    }
+
+    fun onActionMove(eventPoint: BrushPoint) {
+        brushPen.onActionMove(eventPoint, surfaceWidth, surfaceHeight)
+    }
+
+    fun onActionUp(eventPoint: BrushPoint) {
+        brushPen.onActionUp(eventPoint, surfaceWidth, surfaceHeight)
+    }
+
+    fun drawPoints(points: List<Float>) {
+        Log.d("BrushRenderer", "drawPoints count = ${points.size}")
+        vertexBuffer = OpenGLHelper.createFloatBuffer(points.toFloatArray())
+        vertexCount = points.size / 2
+    }
+
+    fun saveFrame(points: List<Float>) {
+        Log.d("BrushRenderer", "saveFrame count = ${points.size}")
+        cacheFrameVertexBuffer = OpenGLHelper.createFloatBuffer(points.toFloatArray())
+        cacheFrameVertexCount = points.size / 2
+    }
+
+    fun selectColor(color: Int) {
+        brushPen.penColor = color
+    }
+
+    fun setPenColor(color: Int) {
+        brushPen.penColor = color
+    }
+
+    /**
+     * 设置颜色混合比例
+     * @param ratio 混合比例，范围0-1
+     *              0表示完全使用历史颜色
+     *              1表示完全使用新绘制的颜色
+     *              0.5表示两种颜色均匀混合
+     */
+    fun setMixRatio(ratio: Float) {
+        mixShader.setMixRatio(ratio)
     }
 
     private fun frameBufferToBitmap(): Bitmap {
@@ -239,5 +287,56 @@ class BrushRenderer(
         bitmap.copyPixelsFromBuffer(intBuffer)
 
         return bitmap
+    }
+
+    /**
+     * 获取指定区域的内容
+     */
+    fun getContentBitmap(rect: RectF): Bitmap {
+        // 确保在GL线程中执行
+        var resultBitmap: Bitmap? = null
+        mBrushView.queueEvent {
+            val x = rect.left.toInt()
+            val y = surfaceHeight - rect.bottom.toInt()
+            val width = rect.width().toInt()
+            val height = rect.height().toInt()
+
+            // 绑定帧缓冲区
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, resultFrameBuffer.getTextureId())
+
+            val intBuffer = IntBuffer.allocate(width * height)
+            intBuffer.position(0)
+
+            // 读取像素
+            GLES20.glReadPixels(x, y, width, height, GLES20.GL_RGBA, GLES20.GL_UNSIGNED_BYTE, intBuffer)
+
+            // 创建位图
+            val bitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
+            bitmap.copyPixelsFromBuffer(intBuffer)
+
+            // OpenGL的坐标系与Android的坐标系y轴相反，需要垂直翻转
+            val matrix = Matrix()
+            matrix.postScale(1f, -1f)
+            resultBitmap = Bitmap.createBitmap(bitmap, 0, 0, width, height, matrix, true)
+
+            // 解绑帧缓冲区
+            GLES20.glBindFramebuffer(GLES20.GL_FRAMEBUFFER, 0)
+        }
+
+        // 等待GL线程执行完成
+        mBrushView.queueEvent {
+            synchronized(this) {
+                (this as Object).notify()
+            }
+        }
+        synchronized(this) {
+            try {
+                (this as Object).wait()
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+        }
+
+        return resultBitmap ?: Bitmap.createBitmap(1, 1, Bitmap.Config.ARGB_8888)
     }
 }
