@@ -1,11 +1,14 @@
 package com.zipper.gldemo2
 
+import android.graphics.Color
 import android.opengl.GLSurfaceView
 import android.os.Bundle
+import android.widget.Button
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import com.zipper.gldemo2.paint.BrushGLSurfaceView
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -17,11 +20,14 @@ class MainActivity : AppCompatActivity() {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
             insets
         }
-//        findViewById<GLSurfaceView>(R.id.glSurfaceView).apply {
-//            setEGLContextClientVersion(2)
-//            setEGLConfigChooser(false)
-//            setRenderer(MyGLRender(this@MainActivity))
-//            renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
-//        }
+        val surfaceView = findViewById<BrushGLSurfaceView>(R.id.glSurfaceView)
+        val btnRed = findViewById<Button>(R.id.btn_red)
+        val btnBlue = findViewById<Button>(R.id.btn_blue)
+        btnRed.setOnClickListener {
+            surfaceView.setColor(Color.RED)
+        }
+        btnBlue.setOnClickListener {
+            surfaceView.setColor(Color.BLUE)
+        }
     }
 }

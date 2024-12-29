@@ -3,7 +3,7 @@ package com.zipper.gldemo2.shader
 import android.opengl.GLES20
 import com.zipper.gldemo2.OpenGLHelper
 
-class TextureShader: BaseShader() {
+class FrameBufferShader : BaseShader() {
 
     private var textureLocation = -1
 
@@ -44,7 +44,7 @@ class TextureShader: BaseShader() {
 
             void main() {
                 gl_Position = aPosition;
-              vTexCoordinate = vec2(aTextureCoordinate.x, 1.0 - aTextureCoordinate.y);
+                vTexCoordinate = vec2(aTextureCoordinate.x, 1.0 - aTextureCoordinate.y);
             }
         """.trimIndent()
     }
@@ -58,9 +58,11 @@ class TextureShader: BaseShader() {
 
             void main() {
                 vec4 color = texture2D(uTexture, vTexCoordinate);
+                if (color.a <= 0.0) {
+                    discard;
+                }
                 gl_FragColor = color;
             }
         """.trimIndent()
     }
-
 }

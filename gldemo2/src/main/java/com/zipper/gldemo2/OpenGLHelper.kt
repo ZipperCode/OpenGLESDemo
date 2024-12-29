@@ -1,9 +1,13 @@
 package com.zipper.gldemo2
 
 import android.graphics.Bitmap
+import android.graphics.Color
 import android.opengl.GLES20
 import android.opengl.GLUtils
 import android.util.Log
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
+import java.nio.FloatBuffer
 
 object OpenGLHelper {
     @JvmStatic
@@ -166,5 +170,28 @@ object OpenGLHelper {
 
     fun convertedGlYVertex(offsetYRatio: Float): Float {
         return -(offsetYRatio + 0.5f) * 2f
+    }
+
+    fun createFloatBuffer(toFloatArray: FloatArray): FloatBuffer {
+        return ByteBuffer.allocateDirect(toFloatArray.size * Float.SIZE_BYTES)
+            .order(ByteOrder.nativeOrder())
+            .asFloatBuffer().apply {
+                put(toFloatArray)
+                position(0)
+            }
+    }
+
+    fun convertColor(color: Int, colorArr: FloatArray) {
+        if (color == Color.BLACK) {
+            colorArr[0] = -0.39215687f
+            colorArr[1] = -0.39215687f
+            colorArr[2] = -0.39215687f
+            colorArr[3] = 1.0f
+            return
+        }
+        colorArr[0] = Color.red(color) / 255.0f
+        colorArr[1] = Color.green(color) / 255.0f
+        colorArr[2] = Color.blue(color) / 255.0f
+        colorArr[3] = Color.alpha(color) / 255.0f
     }
 }

@@ -5,6 +5,6 @@ attribute vec2 aTextureCoordinate;
 varying vec2 vTexCoordinate;
 
 void main() {
-    gl_Position = vPosition;
+    gl_Position = aPosition;
     vTexCoordinate = aTextureCoordinate;
 }
