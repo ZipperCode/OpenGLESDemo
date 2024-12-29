@@ -29,6 +29,7 @@ abstract class BaseShader {
 
     protected open var positionLocation = -1
     protected open var coordinateLocation = -1
+    protected open var matrixLocation = -1
 
 
     private fun getFloatBuffer(arr: FloatArray): FloatBuffer {
@@ -44,6 +45,7 @@ abstract class BaseShader {
         programHandle[0] = OpenGLHelper.createProgram(getVertexShaderCode(), getFragmentShaderCode())
         positionLocation = getAttribLocation("aPosition")
         coordinateLocation = getAttribLocation("aCoordinate")
+        coordinateLocation = getUniformLocation("uMatrix")
     }
 
     protected fun getAttribLocation(name: String): Int {

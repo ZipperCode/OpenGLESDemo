@@ -131,7 +131,7 @@ class GestureHandler(
     }
 
     override fun onScroll(e1: MotionEvent?, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
-        Log.e("EventState", "onScroll")
+        Log.e("EventState", "onScroll distanceX = $distanceX distanceY = $distanceY")
         offsetX -= distanceX
         offsetY -= distanceY
         gestureCallback.cancelTaskOnMain(flingRunnable)
@@ -171,7 +171,6 @@ class GestureHandler(
             if (scroller.computeScrollOffset()) {
                 val dx = offsetX - scroller.currX * 1.0f
                 val dy = offsetY - scroller.currY * 1.0f
-                Log.i("BAAA", "distance = $dx, $dy")
                 offsetX = scroller.currX * 1.0f
                 offsetY = scroller.currY * 1.0f
                 gestureCallback.onScroll(-dx, dy)

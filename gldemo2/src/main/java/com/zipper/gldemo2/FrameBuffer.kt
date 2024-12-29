@@ -45,7 +45,7 @@ class FrameBuffer {
         GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, 0)
     }
 
-    fun getTextureHandle(): Int {
+    fun getTextureId(): Int {
         return textureId[0]
     }
 }
