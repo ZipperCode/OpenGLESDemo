@@ -15,7 +15,7 @@ class FrameBufferTextureShader(
     private var textureLocation = -1
 
     fun initFrameBuffer(width: Int, height: Int) {
-        frameBuffer.initFrameBuffer(width, height)
+        frameBuffer.init(width, height)
     }
 
     fun withFrameBuffer(block: () -> Unit) {
