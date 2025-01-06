@@ -2,7 +2,6 @@ package com.zipper.gldemo2.paint
 
 import android.content.Context
 import android.graphics.Color
-import android.util.Log
 import android.view.ViewConfiguration
 import com.zipper.gldemo2.OpenGLHelper
 
@@ -53,8 +52,15 @@ class BrushPen(
     private var hasMoved = false // 是否发生过移动
 
     // 笔画属性
-    var pointSize = 100f    // 点的大小
+    var pointSize = 200f    // 点的大小
     var penColor = Color.RED // 画笔颜色
+
+    fun reset(initColor: Int) {
+        paintStack.clear()
+        paintPoints.clear()
+        currentPaints = null
+        penColor = initColor
+    }
 
     /**
      * 处理按下事件
@@ -90,7 +96,7 @@ class BrushPen(
         }
         hasMoved = true
         currentPoint.set(eventPoint)
-        
+
         // 终点设置为上个点和当前点的加权点
         toPoint.setMultiplySum(lastPoint, currentPoint)
         // 使用上一个点作为控制点

@@ -46,7 +46,7 @@ class BrushRenderer(
 
     private val textureShader = TextureShader()
     private val frameTextureShader = FrameBufferShader()
-    private val brushPen = BrushPen(mBrushView.context, this)
+    val brushPen = BrushPen(mBrushView.context, this)
     private val mixShader = MixShader(mBrushView.context)
 
     private val selectColorArr: FloatArray = floatArrayOf(0.0f, 0.0f, 0.0f, 1.0f)
@@ -57,11 +57,18 @@ class BrushRenderer(
     private var captureRect: RectF? = null
     private var captureBitmap: Bitmap? = null
 
+    private var hasReset = false
+
     fun requestCapture(rect: RectF) {
         needCapture = true
         captureRect = RectF(rect)
         // 请求重绘以触发onDrawFrame
         mBrushView.requestRender()
+    }
+
+    fun reset(initColor: Int) {
+        brushPen.reset(initColor)
+        hasReset = true
     }
 
     fun getCaptureBitmap(): Bitmap? {
@@ -176,6 +183,22 @@ class BrushRenderer(
             resultFrameBuffer.withFrame {
                 textureShader.onDrawFrame(paintFrameTextureId)
             }
+        }
+
+        if (hasReset) {
+            paintFrameBuffer.withFrame {
+                glClearColor(0f, 0f, 0f, 0f)
+                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+            }
+            cacheFrameBuffer.withFrame {
+                glClearColor(0f, 0f, 0f, 0f)
+                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+            }
+            resultFrameBuffer.withFrame {
+                GLES20.glClearColor(1f, 1f, 1f, 1.0f)
+                GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT)
+            }
+            hasReset = false
         }
 
         // 4. 显示到屏幕

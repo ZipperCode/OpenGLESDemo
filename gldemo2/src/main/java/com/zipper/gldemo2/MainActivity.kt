@@ -1,5 +1,6 @@
 package com.zipper.gldemo2
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.opengl.GLSurfaceView
 import android.os.Bundle
@@ -9,6 +10,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.widget.addTextChangedListener
 import com.google.android.material.color.MaterialColors
 import com.skydoves.colorpickerview.ColorPickerDialog
 import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener
@@ -21,6 +23,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private var currentColor: Int = Color.RED
 
+    private var inputRed = 0
+    private var inputGreen = 0
+    private var inputBlue = 0
+
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -36,6 +43,40 @@ class MainActivity : AppCompatActivity() {
         setupColorPicker()
         setupMixRatioControl()
         setupSelectionButtons()
+
+        binding.etRed.addTextChangedListener{
+            inputRed = it.toString().toIntOrNull()?.coerceAtLeast(0)?.coerceAtMost(255) ?: 0
+        }
+        binding.etGreen.addTextChangedListener{
+            inputGreen = it.toString().toIntOrNull()?.coerceAtLeast(0)?.coerceAtMost(255) ?: 0
+        }
+        binding.etBlue.addTextChangedListener{
+            inputBlue = it.toString().toIntOrNull()?.coerceAtLeast(0)?.coerceAtMost(255) ?: 0
+        }
+
+        binding.btnColorConfirm.setOnClickListener {
+            val color = Color.rgb(inputRed, inputGreen, inputBlue)
+            currentColor = color
+            binding.glSurfaceView.renderer.setPenColor(color)
+            updateSelectColor()
+        }
+
+        binding.glSurfaceView.onPickColor = {
+            binding.tvPickColorValue.text = it.toRgbString()
+            binding.pickColorPreview.setBackgroundColor(it)
+        }
+        updateSelectColor()
+
+        binding.btnReset.setOnClickListener {
+            binding.glSurfaceView.reset()
+            updateSelectColor()
+            binding.tvPickColorValue.text = null
+            binding.pickColorPreview.background = null
+            binding.seekbarMixRatio.setProgress(50)
+            binding.etRed.editableText.clear()
+            binding.etGreen.editableText.clear()
+            binding.etBlue.editableText.clear()
+        }
     }
 
     private fun setupColorPicker() {
@@ -49,8 +90,8 @@ class MainActivity : AppCompatActivity() {
                 .setPositiveButton("确定", ColorEnvelopeListener { envelope, _ ->
                     val color = envelope.color
                     currentColor = color
-                    updateColorPreview(color)
                     binding.glSurfaceView.renderer.setPenColor(color)
+                    updateSelectColor()
                 })
                 .setNegativeButton("取消") { dialogInterface, _ ->
                     dialogInterface.dismiss()
@@ -82,8 +123,15 @@ class MainActivity : AppCompatActivity() {
         binding.btnSelectionMode.setOnClickListener {
             isSelectionMode = !isSelectionMode
             binding.btnSelectionMode.text = if (isSelectionMode) "退出选区" else "选区模式"
-            binding.glSurfaceView.setSelectionMode(isSelectionMode)
+            binding.glSurfaceView.setMode(if (isSelectionMode) BrushGLSurfaceView.Mode.Selection else BrushGLSurfaceView.Mode.Normal)
             binding.btnSaveSelection.isEnabled = isSelectionMode
+        }
+
+        var isPickMode = false
+        binding.btnPickMode.setOnClickListener {
+            isPickMode = !isPickMode
+            binding.btnPickMode.text = if (isPickMode) "退出取色" else "取色模式"
+            binding.glSurfaceView.setMode(if (isPickMode) BrushGLSurfaceView.Mode.PickColor else BrushGLSurfaceView.Mode.Normal)
         }
 
         // 保存选区按钮
@@ -99,5 +147,21 @@ class MainActivity : AppCompatActivity() {
 
     private fun updateColorPreview(color: Int) {
         binding.colorPreview.setBackgroundColor(color)
+    }
+
+    private fun updateSelectColor() {
+        val color = binding.glSurfaceView.renderer.brushPen.penColor
+        binding.tvColorValue.text = color.toRgbString()
+        binding.colorPreview.setBackgroundColor(color)
+        val red = Color.red(color)
+        val green = Color.green(color)
+        val blue = Color.blue(color)
+        binding.etRed.setText(red.toString())
+        binding.etGreen.setText(green.toString())
+        binding.etBlue.setText(blue.toString())
+    }
+
+    fun Int.toRgbString(): String {
+        return "(${Color.red(this)}, ${Color.green(this)}, ${Color.blue(this)})"
     }
 }

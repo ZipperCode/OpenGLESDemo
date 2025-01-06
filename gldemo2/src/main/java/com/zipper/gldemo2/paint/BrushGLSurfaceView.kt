@@ -3,9 +3,12 @@ package com.zipper.gldemo2.paint
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.RectF
 import android.opengl.GLSurfaceView
 import android.util.AttributeSet
 import android.view.MotionEvent
+import com.zipper.gldemo2.selection.PickColorDrawer
 import com.zipper.gldemo2.selection.SelectionDrawer
 import com.zipper.gldemo2.selection.SelectionRect
 
@@ -13,9 +16,18 @@ class BrushGLSurfaceView(context: Context?, attrs: AttributeSet?) : GLSurfaceVie
 
     val renderer = BrushRenderer(this)
     private val eventPoint = BrushPoint()
-    private var isSelectionMode = false
+    public enum class Mode {
+        Selection,
+        PickColor,
+        Normal
+    }
+    private var mode = Mode.Normal
     private val selectionRect = SelectionRect()
+    private val pickRect = SelectionRect()
     private val selectionDrawer = SelectionDrawer()
+    private val pickColorDrawer = PickColorDrawer()
+
+    var onPickColor = { color: Int -> }
 
     init {
         setEGLContextClientVersion(2)
@@ -32,15 +44,15 @@ class BrushGLSurfaceView(context: Context?, attrs: AttributeSet?) : GLSurfaceVie
                 centerX + 100,
                 centerY + 100
             )
+            pickRect.initPosition(centerX - 10,
+                centerY - 10,
+                centerX + 10,
+                centerY + 10 )
         }
     }
 
-    fun setColor(color: Int) {
-        renderer.selectColor(color)
-    }
-
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        if (isSelectionMode) {
+        if (mode == Mode.Selection || mode == Mode.PickColor) {
             // 选区模式下的触摸处理
             when (event.action) {
                 MotionEvent.ACTION_DOWN -> {
@@ -56,6 +68,11 @@ class BrushGLSurfaceView(context: Context?, attrs: AttributeSet?) : GLSurfaceVie
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                     selectionRect.endMove()
                     invalidate()
+                    if (mode == Mode.PickColor) {
+                        getPickContent()?.run {
+                            onPickColor.invoke(this)
+                        }
+                    }
                 }
             }
         } else {
@@ -79,11 +96,22 @@ class BrushGLSurfaceView(context: Context?, attrs: AttributeSet?) : GLSurfaceVie
         return true
     }
 
+    fun reset(initColor: Int = Color.RED) {
+        mode = Mode.Normal
+        renderer.reset(initColor)
+        requestRender()
+    }
+
     /**
      * 设置选区模式
      */
     fun setSelectionMode(enabled: Boolean) {
-        isSelectionMode = enabled
+        mode = Mode.Selection
+        invalidate()
+    }
+
+    fun setMode(mode: Mode) {
+        this.mode = mode
         invalidate()
     }
 
@@ -98,11 +126,26 @@ class BrushGLSurfaceView(context: Context?, attrs: AttributeSet?) : GLSurfaceVie
         return renderer.getCaptureBitmap()
     }
 
+    fun getPickContent(): Int? {
+        val rect = selectionRect.getRect()
+        val centerX = rect.centerX()
+        val centerY = rect.centerY()
+        val pickRect = RectF(centerX - 5, centerY - 5, centerX + 5, centerY + 5)
+        renderer.requestCapture(pickRect)
+        requestRender()
+        Thread.sleep(100)
+        return renderer.getCaptureBitmap()?.run {
+            getPixel(width / 2, height / 2)
+        }
+    }
+
     override fun dispatchDraw(canvas: Canvas) {
         super.dispatchDraw(canvas)
         // 在选区模式下绘制选区
-        if (isSelectionMode) {
+        if (mode == Mode.Selection) {
             selectionDrawer.drawSelection(canvas, selectionRect.getRect())
+        } else if (mode == Mode.PickColor){
+            pickColorDrawer.drawSelection(canvas, selectionRect.getRect())
         }
     }
 }

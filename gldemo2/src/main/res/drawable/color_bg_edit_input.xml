@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 仅包含下划线的输入框背景 -->
+    <item
+        android:bottom="0dp"
+        android:left="-2px"
+        android:right="-2px"
+        android:top="-2px">
+        <shape>
+            <stroke
+                android:color="#44000000"
+                android:width="2px" />
+        </shape>
+    </item>
+</layer-list>
