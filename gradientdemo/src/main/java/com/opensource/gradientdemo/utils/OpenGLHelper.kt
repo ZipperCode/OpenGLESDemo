@@ -1,4 +1,4 @@
-package com.zipper.gldemo2
+package com.opensource.gradientdemo.utils
 
 import android.graphics.Bitmap
 import android.graphics.Color

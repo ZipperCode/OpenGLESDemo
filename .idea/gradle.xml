@@ -12,6 +12,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/egl_fbo" />
             <option value="$PROJECT_DIR$/gldemo2" />
+            <option value="$PROJECT_DIR$/gradientdemo" />
           </set>
         </option>
         <option name="resolveExternalAnnotations" value="false" />
