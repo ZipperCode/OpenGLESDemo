@@ -18,4 +18,5 @@ rootProject.name = "OpenGLEDemo"
 include ':app'
 include ':egl_fbo'
 include ':gldemo2'
+include ':gl_vector'
 include ':gradientdemo'
