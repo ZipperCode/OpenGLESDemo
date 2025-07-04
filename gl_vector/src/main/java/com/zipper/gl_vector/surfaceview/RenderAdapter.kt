@@ -1,12 +1,6 @@
-package com.zipper.gl_vector
+package com.zipper.gl_vector.surfaceview
 
-interface RenderAdapter {
-
-    fun onCreate()
-
-    fun onSize(width: Int, height: Int)
-
-    fun onRender()
+interface RenderAdapter : IRender{
 
     fun onDispose()
 

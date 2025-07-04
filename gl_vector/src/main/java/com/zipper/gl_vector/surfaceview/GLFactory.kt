@@ -1,6 +1,5 @@
 package com.zipper.gl_vector.surfaceview
 
-import android.opengl.EGL14
 import android.opengl.GLSurfaceView
 import android.util.Log
 import javax.microedition.khronos.egl.EGL10

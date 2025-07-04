@@ -7,8 +7,8 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity">
 
-  <com.zipper.gl_vector.GLView
-      android:id="@+id/surfaceView"
-      android:layout_width="match_parent"
-      android:layout_height="match_parent" />
+    <com.zipper.gl_vector.surfaceview.GLView
+        android:id="@+id/surfaceView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
 </androidx.constraintlayout.widget.ConstraintLayout>

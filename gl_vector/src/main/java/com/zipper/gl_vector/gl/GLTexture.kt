@@ -1,8 +1,8 @@
-package com.zipper.gl_vector
+package com.zipper.gl_vector.gl
 
 import android.graphics.Bitmap
-import android.opengl.GLES20
 import android.opengl.GLUtils
+import com.zipper.gl_vector.GL
 
 open class GLTexture(
     private val glTarget: Int = GL.GL_TEXTURE_2D
@@ -19,7 +19,7 @@ open class GLTexture(
 //            glHandle = buf.get(0)
             val texture = IntArray(1)
             // 生成纹理id
-            GLES20.glGenTextures(1, texture, 0)
+            GL.glGenTextures(1, texture, 0)
             glHandle = texture[0]
         }
     }
@@ -46,7 +46,6 @@ open class GLTexture(
             glHandle = 0
         }
     }
-
 
     fun setFilter(min: Int = GL.GL_LINEAR, mag: Int = GL.GL_LINEAR) = apply {
         // 最近采样： 使用纹理坐标最接近的颜色作为需要绘制的颜色 (容易带锯齿)

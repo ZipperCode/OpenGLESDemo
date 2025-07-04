@@ -1,12 +1,18 @@
 package com.zipper.gl_vector
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
+import com.zipper.gl_vector.gl.GLFrameBuffer
+import com.zipper.gl_vector.gl.GLTexture
+import com.zipper.gl_vector.gl.OrthographicCamera
+import com.zipper.gl_vector.shader.TextureShader
+import com.zipper.gl_vector.surfaceview.RenderAdapter
 
 class DrawImageRender(
     private val context: Context
-): RenderAdapter {
+) : RenderAdapter {
 
     private val orthographicCamera = OrthographicCamera()
 
@@ -14,21 +20,27 @@ class DrawImageRender(
     private val colorShader = ColorShader()
 
     private val texture = GLTexture()
-    private val identityMatrix = floatArrayOf(1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f)
+    private val maskTexture = GLTexture()
 
 
-    override fun onCreate() {
+    override fun onCreated() {
         imageShader.initialize()
-        val bitmap = BitmapFactory.decodeStream(context.assets.open("test.jpg"))
-        texture.upload(bitmap)
         colorShader.initialize()
+        val bitmap = BitmapFactory.decodeStream(context.assets.open("4.png"))
+        texture.upload(bitmap)
         val err = GL.glGetError()
         Log.d("BAAA", "err1 = $err")
         Log.d("BAAA", "onCreate")
-
+        orthographicCamera.updateRenderSize(bitmap.width, bitmap.height)
     }
 
-    override fun onSize(width: Int, height: Int) {
+    fun uploadMask(bitmap: Bitmap) {
+        maskTexture.upload(bitmap)
+        orthographicCamera.updateRenderSize(bitmap.width, bitmap.height)
+    }
+
+
+    override fun onSizeChanged(width: Int, height: Int) {
         orthographicCamera.updateViewport(width, height)
         GL.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
@@ -37,19 +49,30 @@ class DrawImageRender(
     }
 
     override fun onRender() {
-        GL.glClearColor(1.0f, 0.0f, 1.0f, 1.0f)
+        GL.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
         GL.glClear(GL.GL_COLOR_BUFFER_BIT)
         // Log.d("BAAA", "Render")
         val mvp = orthographicCamera.update()
-//        GL.glClearColor(1.0f, 1.0f, 1.0f, 1.0f)
-//        GL.glClear(GL.GL_COLOR_BUFFER_BIT)
-        imageShader.draw(texture, mvp)
+        GL.glEnable(GL.GL_BLEND)
+        GL.glBlendFunc(GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA)
+        imageShader.setTexture(maskTexture)
+        imageShader.render(mvp)
+        imageShader.setTexture(texture)
+        imageShader.render(mvp)
+//        colorShader.render(mvp)
+        GL.glDisable(GL.GL_BLEND)
         val err = GL.glGetError()
         Log.d("BAAA", "err2 = $err")
 //        colorShader.draw(identityMatrix)
     }
 
     override fun onDispose() {
+
+    }
+
+    override fun onDown(x: Float, y: Float) {
+        super.onDown(x, y)
+
 
     }
 

@@ -1,8 +1,8 @@
-package com.zipper.gl_vector
+package com.zipper.gl_vector.gl
 
 import com.zipper.gl_vector.math.Matrix4
-import com.zipper.gl_vector.math.Quaternion
 import com.zipper.gl_vector.math.Vector3
+import com.zipper.gl_vector.math.Vector4
 import kotlin.math.max
 import kotlin.math.min
 
@@ -50,14 +50,14 @@ class OrthographicCamera {
 
     private val tmpMatrix = Matrix4()
 
-    val tempVec = Quaternion()
-    val tempVec2 = Quaternion()
+    val tempVec = Vector4()
+    val tempVec2 = Vector4()
 
     /**
      * 齐次坐标，变换之后的最终顶点坐标
      */
-    private val finalTopLeftVec = Quaternion()
-    private var finalBottomRightVec = Quaternion()
+    private val finalTopLeftVec = Vector4()
+    private var finalBottomRightVec = Vector4()
 
     private val near = 0f
     private val far = 1f
@@ -85,6 +85,13 @@ class OrthographicCamera {
     fun updateViewport(width: Int, height: Int) {
         this.viewportWidth = width
         this.viewportHeight = height
+        updateProjectionMatrix()
+        updateViewMatrix()
+    }
+
+    fun updateRenderSize(width: Int, height: Int) {
+        this.renderWidth = width
+        this.renderHeight = height
         updateProjectionMatrix()
         updateViewMatrix()
     }

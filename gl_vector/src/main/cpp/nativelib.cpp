@@ -22,7 +22,7 @@ struct Point {
 };
 
 
-const int lineColorThreshold = 10;
+const int lineColorThreshold = 200;
 const float minColorDistance = 60.f;
 // 最小区域的面积
 const int minRegionAreaThreshold = 10;
@@ -44,105 +44,6 @@ float calculateColorDistance(uint32_t color1, uint32_t color2) {
 
     return std::sqrt(dr * dr + dg * dg + db * db);
 }
-// 计算两个颜色的欧几里得距离
-float colorDistance(uint32_t c1, uint32_t c2) {
-    int r1 = (c1 >> 16) & 0xFF;
-    int g1 = (c1 >> 8) & 0xFF;
-    int b1 = c1 & 0xFF;
-    int r2 = (c2 >> 16) & 0xFF;
-    int g2 = (c2 >> 8) & 0xFF;
-    int b2 = c2 & 0xFF;
-    return std::sqrt((r1-r2)*(r1-r2) + (g1-g2)*(g1-g2) + (b1-b2)*(b1-b2));
-}
-
-// HSL转RGB
-uint32_t hslToRgb(float h, float s, float l) {
-    float c = (1 - std::fabs(2 * l - 1)) * s;
-    float x = c * (1 - std::fabs(std::fmod(h / 60.0, 2) - 1));
-    float m = l - c/2;
-
-    float r, g, b;
-    if (h >= 0 && h < 60) {
-        r = c; g = x; b = 0;
-    } else if (h >= 60 && h < 120) {
-        r = x; g = c; b = 0;
-    } else if (h >= 120 && h < 180) {
-        r = 0; g = c; b = x;
-    } else if (h >= 180 && h < 240) {
-        r = 0; g = x; b = c;
-    } else if (h >= 240 && h < 300) {
-        r = x; g = 0; b = c;
-    } else {
-        r = c; g = 0; b = x;
-    }
-
-    int ri = static_cast<int>((r + m) * 255);
-    int gi = static_cast<int>((g + m) * 255);
-    int bi = static_cast<int>((b + m) * 255);
-
-    return 0xFF000000 | (ri << 16) | (gi << 8) | bi;
-}
-
-// 分层颜色生成器
-class ColorGenerator {
-private:
-    // 基础颜色表
-    std::vector<uint32_t> baseColors;
-    // 已生成颜色缓存
-    std::unordered_map<int, uint32_t> colorCache;
-    // 区域大小
-    const int regionSize = 100;
-    // 黄金比例常数
-    const float goldenRatio = 0.618033988749895f;
-
-public:
-    ColorGenerator() {
-        // 初始化基础颜色表
-        baseColors = {
-                0xFF000000, 0xFFFF0000, 0xFF00FF00, 0xFF0000FF,
-                0xFFFFFF00, 0xFFFF00FF, 0xFF00FFFF, 0xFF800000,
-                0xFF008000, 0xFF000080, 0xFF808000, 0xFF800080,
-                0xFF008080, 0xFFC0C0C0, 0xFF808080, 0xFF404040
-        };
-    }
-
-    // 为特定index生成唯一颜色
-    uint32_t getColor(int index) {
-        // 检查缓存
-        auto it = colorCache.find(index);
-        if (it != colorCache.end()) {
-            return it->second;
-        }
-
-        // 计算区域和区域内索引
-        int region = index / regionSize;
-        int offset = index % regionSize;
-
-        // 基础颜色
-        uint32_t baseColor = baseColors[region % baseColors.size()];
-
-        // 在基础颜色上进行微调
-        float hue = (offset * goldenRatio) * 360.0f;
-        float saturation = 0.7f + (offset % 3) * 0.1f;
-        float lightness = 0.6f + ((offset / 3) % 3) * 0.1f;
-
-        uint32_t generatedColor = hslToRgb(hue, saturation, lightness);
-
-        // 确保与同区域的基础颜色距离足够大
-        if (colorDistance(generatedColor, baseColor) < 60) {
-            // 微调亮度
-            lightness = (lightness + 0.3f) > 1.0f ? lightness - 0.3f : lightness + 0.3f;
-            generatedColor = hslToRgb(hue, saturation, lightness);
-        }
-
-        // 缓存结果
-        colorCache[index] = generatedColor;
-        return generatedColor;
-    }
-};
-
-// 全局生成器实例
-static ColorGenerator colorGenerator;
 
 // 3D空间点哈希函数
 uint32_t hashPoint(int x, int y, int z) {
@@ -158,9 +59,9 @@ uint32_t hashPoint(int x, int y, int z) {
 
 // 从哈希值生成颜色
 uint32_t hashToColor(uint32_t hash) {
-    int r = (hash >> 16) & 0xFF;
-    int g = (hash >> 8) & 0xFF;
-    int b = hash & 0xFF;
+    uint8_t r = (hash >> 16) & 0xFF;
+    uint8_t g = (hash >> 8) & 0xFF;
+    uint8_t b = hash & 0xFF;
     return 0xFF000000 | (r << 16) | (g << 8) | (b << 0);
 }
 
@@ -173,15 +74,15 @@ private:
     const int regionOffset = 61;
     // 随机旋转矩阵参数
     const float rotationMatrix[3][3] = {
-            {0.70710678, -0.5, 0.5},
-            {0.5, 0.70710678, 0.5},
-            {-0.5, -0.5, 0.70710678}
+            {0.70710678, -0.5,       0.5},
+            {0.5,        0.70710678, 0.5},
+            {-0.5,       -0.5,       0.70710678}
     };
     // 缓存已生成的颜色
     std::unordered_map<int, uint32_t> colorCache;
 
     // 3D空间坐标转换
-    void transformCoordinates(int index, int& x, int& y, int& z) {
+    void transformCoordinates(int index, int &x, int &y, int &z) {
         // 使用质数确保均匀分布
         const int p1 = 73856093;
         const int p2 = 19349663;
@@ -193,9 +94,9 @@ private:
         z = (index * p3) ^ ((index >> 8) * p1);
 
         // 应用旋转矩阵，增加随机性
-        int tx = x;
-        int ty = y;
-        int tz = z;
+        auto tx = static_cast<float>(x);
+        auto ty = static_cast<float>(y);
+        auto tz = static_cast<float>(z);
         x = static_cast<int>(tx * rotationMatrix[0][0] + ty * rotationMatrix[0][1] + tz * rotationMatrix[0][2]);
         y = static_cast<int>(tx * rotationMatrix[1][0] + ty * rotationMatrix[1][1] + tz * rotationMatrix[1][2]);
         z = static_cast<int>(tx * rotationMatrix[2][0] + ty * rotationMatrix[2][1] + tz * rotationMatrix[2][2]);
@@ -229,9 +130,9 @@ public:
         uint32_t baseColor = hashToColor(hash);
 
         // 微调颜色，确保每个区域内的颜色也有差异
-        int r = (baseColor >> 16) & 0xFF;
-        int g = (baseColor >> 8) & 0xFF;
-        int b = baseColor & 0xFF;
+        uint8_t r = (baseColor >> 16) & 0xFF;
+        uint8_t g = (baseColor >> 8) & 0xFF;
+        uint8_t b = baseColor & 0xFF;
 
         // 使用index的低位进行微调
         r = (r + (index * 17) % regionSize) % 256;
@@ -253,12 +154,12 @@ static ColorGenerator2 colorGenerator2;
 // 假设线条是黑色或深色，R, G, B 值都低于某个阈值
 bool isLineColor(uint32_t pixel, int threshold) {
     uint8_t a = (pixel >> 24) & 0xFF;
-    if (a == 0) {
+    if (a < 150) {
         return false;
     }
-    int r = (pixel >> 16) & 0xFF; // ARGB_8888
-    int g = (pixel >> 8) & 0xFF;
-    int b = pixel & 0xFF;
+    uint8_t r = (pixel >> 16) & 0xFF; // ARGB_8888
+    uint8_t g = (pixel >> 8) & 0xFF;
+    uint8_t b = pixel & 0xFF;
     return r < threshold && g < threshold && b < threshold;
 }
 
@@ -384,4 +285,144 @@ Java_com_zipper_gl_1vector_RegionCalculator_calculateRegions(JNIEnv *env, jobjec
     delete[] maskPixels; // 释放C++中分配的像素内存
 
     return resultBitmap;
+}
+extern "C"
+JNIEXPORT jint JNICALL
+Java_com_zipper_gl_1vector_RegionCalculator_regionGenerate(JNIEnv *env, jobject thiz, jobject line_art_bitmap, jobject mask_bitmap) {
+    AndroidBitmapInfo info;
+    AndroidBitmapInfo maskInfo;
+    void *pixels;
+    void *pixels2;
+    int ret;
+    // 获取Bitmap信息
+    if ((ret = AndroidBitmap_getInfo(env, line_art_bitmap, &info)) < 0) {
+        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
+        return -1;
+    }
+
+    // 检查Bitmap格式，目前只支持 ARGB_8888
+    if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        LOGE("Bitmap format is not RGBA_8888 !");
+        return -1;
+    }
+
+    // 获取Bitmap信息
+    if ((ret = AndroidBitmap_getInfo(env, mask_bitmap, &maskInfo)) < 0) {
+        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
+        return -1;
+    }
+
+    // 检查Bitmap格式，目前只支持 ARGB_8888
+    if (maskInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        LOGE("Bitmap format is not RGBA_8888 !");
+        return -1;
+    }
+
+    // 检查Bitmap尺寸
+    if (info.width != maskInfo.width || info.height != maskInfo.height) {
+        LOGE("Bitmap size is not equal to input image size !");
+        return -1;
+    }
+
+    // 锁定像素，直接访问像素数据
+    if ((ret = AndroidBitmap_lockPixels(env, line_art_bitmap, &pixels)) < 0) {
+        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+        return -1;
+    }
+    if ((ret = AndroidBitmap_lockPixels(env, mask_bitmap, &pixels2)) < 0) {
+        AndroidBitmap_unlockPixels(env, line_art_bitmap);
+        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+        return -1;
+    }
+
+    LOGD("线稿区域生成，开始");
+    int width = static_cast<int>(info.width);
+    int height = static_cast<int>(info.height);
+
+    auto *linePixels = static_cast<uint32_t *>(pixels);
+    auto *maskPixels = static_cast<uint32_t *>(pixels2);
+
+    std::vector<int> regionIds(width * height, -1);
+
+    int currentRegionId = 0;
+    std::queue<Point> q;
+    std::unordered_map<uint32_t, int> regionColorCount;
+
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            uint32_t index = y * width + x;
+            uint32_t pixel = linePixels[index];
+
+            if (isLineColor(pixel, lineColorThreshold)) {
+                // 线条，不作为可填充区域
+                regionIds[index] = -1;
+                // 蒙版图上线条区域设置为黑色
+                maskPixels[index] = 0xFF000000; // ARGB_8888 黑色
+                continue;
+            }
+            if (regionIds[index] == -1) {
+                // 未访问过的区域
+                q.push({x, y});
+                regionIds[index] = currentRegionId;
+                int areaCount = 0;
+
+                while (!q.empty()) {
+                    auto p = q.front();
+                    q.pop();
+                    areaCount++;
+
+                    // 检查相邻像素 (上、下、左、右)
+                    int dx[] = {0, 0, 1, -1};
+                    int dy[] = {1, -1, 0, 0};
+
+                    for (int i = 0; i < 4; i++) {
+                        int nx = p.x + dx[i];
+                        int ny = p.y + dy[i];
+                        uint32_t nIndex = ny * width + nx;
+
+                        if (nx >= 0 && nx < width && ny >= 0 && ny < height && regionIds[nIndex] == -1) {
+                            uint32_t neighborPixel = linePixels[nIndex];
+                            if (!isLineColor(neighborPixel, lineColorThreshold)) {
+                                regionIds[nIndex] = currentRegionId;
+                                q.push(Point({nx, ny}));
+                            }
+                        }
+                    }
+                }
+                if (areaCount < 50) {
+                    LOGD("区域数量 = %d", areaCount);
+                    regionColorCount.insert({colorGenerator2.getColor(regionIds[index]), areaCount});
+                    // regionIdCount.insert({currentRegionId})
+                }
+
+                // 区域都访问完了
+                currentRegionId++;
+            }
+            int regionId = regionIds[index];
+            if (regionId == -1) {
+                maskPixels[index] = 0xFF000000;
+            } else {
+                // 填充到蒙版
+                maskPixels[index] = colorGenerator2.getColor(regionIds[index]);
+            }
+        }
+    }
+
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            uint32_t index = y * width + x;
+            uint32_t pixel = maskPixels[index];
+            int count = regionColorCount[pixel];
+            if(count > 0) {
+                maskPixels[index] = 0xFF000000;
+            }
+        }
+    }
+
+    // 解锁像素
+    AndroidBitmap_unlockPixels(env, line_art_bitmap);
+    AndroidBitmap_unlockPixels(env, mask_bitmap);
+
+    return 0;
 }

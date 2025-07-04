@@ -9,17 +9,15 @@ import android.util.AttributeSet
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
-import android.view.SurfaceHolder
 import android.view.View
 import android.widget.Scroller
-import com.zipper.gl_vector.RenderAdapter
 import java.util.concurrent.CopyOnWriteArrayList
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.math.max
 import kotlin.math.min
 
-open class GLView(
+class GLView(
     context: Context, attrs: AttributeSet?
 ) : GLSurfaceView(context, attrs), GLSurfaceView.Renderer,
     ScaleGestureDetector.OnScaleGestureListener,
@@ -30,28 +28,24 @@ open class GLView(
 
     @Volatile
     private var onCreated = false
-    @Volatile
-    private var isDestroy = false
 
     init {
         setEGLContextClientVersion(2)
         setRenderer(this)
         setOnTouchListener(this)
-        setEGLWindowSurfaceFactory()
         renderMode = RENDERMODE_WHEN_DIRTY
     }
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         onCreated = true
-        isDestroy = false
         for (adapter in renderAdapters) {
-            adapter.onCreate()
+            adapter.onCreated()
         }
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
         for (adapter in renderAdapters) {
-            adapter.onSize(width, height)
+            adapter.onSizeChanged(width, height)
         }
     }
 
@@ -61,29 +55,12 @@ open class GLView(
         }
     }
 
-    override fun surfaceCreated(holder: SurfaceHolder) {
-        super.surfaceCreated(holder)
-       queueEvent {
-
-       }
-    }
-
-    override fun surfaceDestroyed(holder: SurfaceHolder) {
-//        queueEvent {
-//            onCreated = false
-//            for (adapter in renderAdapters) {
-//                adapter.onDestroy()
-//            }
-//            isDestroy = true
-//        }
-        super.surfaceDestroyed(holder)
-    }
-
     fun register(adapter: RenderAdapter) {
         renderAdapters.add(adapter)
         if (onCreated) {
             queueEvent {
-                adapter.onCreate()
+                adapter.onCreated()
+                adapter.onSizeChanged(width, height)
             }
         }
     }
@@ -230,7 +207,7 @@ open class GLView(
     ///////////////////////////////////////////////////////////////////////////////////////////////
 
 
-    fun onDown(x: Float, y: Float) {
+    private fun onDown(x: Float, y: Float) {
         queueEvent {
             for (adapter in renderAdapters) {
                 adapter.onDown(x, y)
@@ -239,7 +216,7 @@ open class GLView(
         requestRender()
     }
 
-    fun onTranslate(dx: Float, dy: Float) {
+    private fun onTranslate(dx: Float, dy: Float) {
         queueEvent {
             for (adapter in renderAdapters) {
                 adapter.onTranslate(dx, dy)
@@ -248,7 +225,7 @@ open class GLView(
         requestRender()
     }
 
-    fun onScale(scale: Float, focusX: Float, focusY: Float) {
+    private fun onScale(scale: Float, focusX: Float, focusY: Float) {
         queueEvent {
             for (adapter in renderAdapters) {
                 adapter.onScale(scale, focusX, focusY)

@@ -1,11 +1,17 @@
 package com.zipper.gl_vector.math
 
 import android.opengl.Matrix
+import java.lang.IllegalArgumentException
 
 @JvmInline
 value class Matrix4(
     private val values: FloatArray = IDENTIFY.clone()
 ) {
+    init {
+        if (values.size != 16) {
+            throw IllegalArgumentException("Matrix4 size must be 16")
+        }
+    }
 
     companion object {
         val IDENTIFY = floatArrayOf(
@@ -14,22 +20,6 @@ value class Matrix4(
             0f, 0f, 1f, 0f,
             0f, 0f, 0f, 1f
         )
-        const val M00 = 0
-        const val M01 = 1
-        const val M02 = 2
-        const val M03 = 3
-        const val M10 = 4
-        const val M11 = 5
-        const val M12 = 6
-        const val M13 = 7
-        const val M20 = 8
-        const val M21 = 9
-        const val M22 = 10
-        const val M23 = 11
-        const val M30 = 12
-        const val M31 = 13
-        const val M32 = 14
-        const val M33 = 15
     }
 
     fun reset() = apply {
@@ -52,7 +42,7 @@ value class Matrix4(
         Matrix.multiplyMV(vec, 0, values, 0, vec, 0)
     }
 
-    fun multiplyV(vec: Quaternion) = apply {
+    fun multiplyV(vec: Vector4) = apply {
         Matrix.multiplyMV(vec.values(), 0, values, 0, vec.values(), 0)
     }
 

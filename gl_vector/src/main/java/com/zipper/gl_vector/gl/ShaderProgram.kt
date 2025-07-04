@@ -1,6 +1,7 @@
-package com.zipper.gl_vector
+package com.zipper.gl_vector.gl
 
 import android.util.Log
+import com.zipper.gl_vector.GL
 import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -55,6 +56,14 @@ open class ShaderProgram(
         vertexShaderHandle = -1
         fragmentShaderHandle = -1
         program = -1
+    }
+
+    fun checkAttributeLocation(name: String): Boolean {
+        return attributes.containsKey(name)
+    }
+
+    fun checkUniformLocation(name: String): Boolean {
+        return uniforms.containsKey(name)
     }
 
     fun fetchAttributeLocation(name: String): Int {

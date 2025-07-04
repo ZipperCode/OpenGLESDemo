@@ -11,6 +11,7 @@ import android.view.MotionEvent
 import com.zipper.gldemo2.selection.PickColorDrawer
 import com.zipper.gldemo2.selection.SelectionDrawer
 import com.zipper.gldemo2.selection.SelectionRect
+import com.zipper.opengl.filter.OffscreenBufferHelper
 
 class BrushGLSurfaceView(context: Context?, attrs: AttributeSet?) : GLSurfaceView(context, attrs) {
 
@@ -26,6 +27,7 @@ class BrushGLSurfaceView(context: Context?, attrs: AttributeSet?) : GLSurfaceVie
     private val pickRect = SelectionRect()
     private val selectionDrawer = SelectionDrawer()
     private val pickColorDrawer = PickColorDrawer()
+    private val offscreenBufferHelper = OffscreenBufferHelper()
 
     var onPickColor = { color: Int -> }
 
@@ -49,6 +51,7 @@ class BrushGLSurfaceView(context: Context?, attrs: AttributeSet?) : GLSurfaceVie
                 centerX + 10,
                 centerY + 10 )
         }
+        offscreenBufferHelper.checkCreateFrameBuffer(width, height)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -147,5 +150,13 @@ class BrushGLSurfaceView(context: Context?, attrs: AttributeSet?) : GLSurfaceVie
         } else if (mode == Mode.PickColor){
             pickColorDrawer.drawSelection(canvas, selectionRect.getRect())
         }
+    }
+
+    override fun onDrawFrame(gl: GL10?) {
+        super.onDrawFrame(gl)
+        offscreenBufferHelper.switchCustomBuffer()
+        // 进行OpenGL操作
+        requestRender()
+        offscreenBufferHelper.switchSystemBuffer()
     }
 }

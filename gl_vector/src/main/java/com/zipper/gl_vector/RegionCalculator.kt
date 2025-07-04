@@ -20,6 +20,8 @@ object RegionCalculator {
 
     external fun calculateRegions(lineArtBitmap: Bitmap): Bitmap
 
+    external fun regionGenerate(lineArtBitmap: Bitmap, maskBitmap: Bitmap): Int
+
     fun IntArray.resetX() {
         this[0] = 0
         this[1] = 0
