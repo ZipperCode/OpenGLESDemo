@@ -8,6 +8,7 @@ import com.zipper.gl_vector.gl.GLFrameBuffer
 import com.zipper.gl_vector.gl.GLTexture
 import com.zipper.gl_vector.gl.OrthographicCamera
 import com.zipper.gl_vector.shader.TextureShader
+import com.zipper.gl_vector.shader.VectorShader
 import com.zipper.gl_vector.surfaceview.RenderAdapter
 
 class DrawImageRender(
@@ -18,6 +19,7 @@ class DrawImageRender(
 
     private val imageShader = TextureShader()
     private val colorShader = ColorShader()
+    private val lineShader = VectorShader()
 
     private val texture = GLTexture()
     private val maskTexture = GLTexture()
@@ -26,11 +28,11 @@ class DrawImageRender(
     override fun onCreated() {
         imageShader.initialize()
         colorShader.initialize()
-        val bitmap = BitmapFactory.decodeStream(context.assets.open("4.png"))
+        lineShader.initialize()
+    }
+
+    fun uploadLine(bitmap: Bitmap) {
         texture.upload(bitmap)
-        val err = GL.glGetError()
-        Log.d("BAAA", "err1 = $err")
-        Log.d("BAAA", "onCreate")
         orthographicCamera.updateRenderSize(bitmap.width, bitmap.height)
     }
 
@@ -57,9 +59,8 @@ class DrawImageRender(
         GL.glBlendFunc(GL.GL_ONE, GL.GL_ONE_MINUS_SRC_ALPHA)
         imageShader.setTexture(maskTexture)
         imageShader.render(mvp)
-        imageShader.setTexture(texture)
-        imageShader.render(mvp)
-//        colorShader.render(mvp)
+        lineShader.glTexture = texture
+        lineShader.render(mvp)
         GL.glDisable(GL.GL_BLEND)
         val err = GL.glGetError()
         Log.d("BAAA", "err2 = $err")

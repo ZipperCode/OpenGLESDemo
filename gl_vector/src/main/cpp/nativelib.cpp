@@ -1,17 +1,16 @@
-#pragma once
 
-#include <jni.h>
+
 #include <jni.h>
 #include <string>
 #include <queue>
-#include <ctime>
-#include <cstdint>
-#include <random>
-#include <cmath>
 #include <unordered_map>
 
 #include <android/log.h>
-#include <android/bitmap.h> // 用于操作 Android Bitmap
+#include <android/bitmap.h>
+
+#include "area_generator.h"
+#include "opengles_blur.h"
+#include "image_process.h"
 
 // 定义日志宏
 #define LOG_TAG "NativeRegionCalculator"
@@ -21,394 +20,309 @@ struct Point {
     int x, y;
 };
 
-
-const int lineColorThreshold = 200;
-const float minColorDistance = 60.f;
-// 最小区域的面积
-const int minRegionAreaThreshold = 10;
-const int threashold = 10;
-
-// 计算RGB颜色之间的欧几里得距离
-float calculateColorDistance(uint32_t color1, uint32_t color2) {
-    uint8_t r1 = (color1 >> 16) & 0xFF;
-    uint8_t g1 = (color1 >> 8) & 0xFF;
-    uint8_t b1 = color1 & 0xFF;
-
-    uint8_t r2 = (color2 >> 16) & 0xFF;
-    uint8_t g2 = (color2 >> 8) & 0xFF;
-    uint8_t b2 = color2 & 0xFF;
-
-    auto dr = static_cast<float>(r1 - r2);
-    auto dg = static_cast<float>(g1 - g2);
-    auto db = static_cast<float>(b1 - b2);
-
-    return std::sqrt(dr * dr + dg * dg + db * db);
-}
-
-// 3D空间点哈希函数
-uint32_t hashPoint(int x, int y, int z) {
-    uint32_t hash = 2166136261u;
-    hash ^= x;
-    hash *= 16777619;
-    hash ^= y;
-    hash *= 16777619;
-    hash ^= z;
-    hash *= 16777619;
-    return hash;
-}
-
-// 从哈希值生成颜色
-uint32_t hashToColor(uint32_t hash) {
-    uint8_t r = (hash >> 16) & 0xFF;
-    uint8_t g = (hash >> 8) & 0xFF;
-    uint8_t b = hash & 0xFF;
-    return 0xFF000000 | (r << 16) | (g << 8) | (b << 0);
-}
-
-// 多维空间分区颜色生成器
-class ColorGenerator2 {
-private:
-    // 区域大小 (确保立方体对角线长度 < 60)
-    const int regionSize = 34; // 34*sqrt(3) ≈ 58.9 < 60
-    // 区域偏移量，确保区域间的最小距离 > 60
-    const int regionOffset = 61;
-    // 随机旋转矩阵参数
-    const float rotationMatrix[3][3] = {
-            {0.70710678, -0.5,       0.5},
-            {0.5,        0.70710678, 0.5},
-            {-0.5,       -0.5,       0.70710678}
-    };
-    // 缓存已生成的颜色
-    std::unordered_map<int, uint32_t> colorCache;
-
-    // 3D空间坐标转换
-    void transformCoordinates(int index, int &x, int &y, int &z) {
-        // 使用质数确保均匀分布
-        const int p1 = 73856093;
-        const int p2 = 19349663;
-        const int p3 = 83492791;
-
-        // 3D康威函数，将1D映射到3D
-        x = (index * p1) ^ ((index >> 16) * p2);
-        y = (index * p2) ^ ((index >> 12) * p3);
-        z = (index * p3) ^ ((index >> 8) * p1);
-
-        // 应用旋转矩阵，增加随机性
-        auto tx = static_cast<float>(x);
-        auto ty = static_cast<float>(y);
-        auto tz = static_cast<float>(z);
-        x = static_cast<int>(tx * rotationMatrix[0][0] + ty * rotationMatrix[0][1] + tz * rotationMatrix[0][2]);
-        y = static_cast<int>(tx * rotationMatrix[1][0] + ty * rotationMatrix[1][1] + tz * rotationMatrix[1][2]);
-        z = static_cast<int>(tx * rotationMatrix[2][0] + ty * rotationMatrix[2][1] + tz * rotationMatrix[2][2]);
-    }
-
-public:
-    // 为特定index生成唯一颜色
-    uint32_t getColor(int index) {
-        // 检查缓存
-        auto it = colorCache.find(index);
-        if (it != colorCache.end()) {
-            return it->second;
-        }
-
-        // 计算3D空间坐标
-        int x, y, z;
-        transformCoordinates(index, x, y, z);
-
-        // 计算区域中心坐标
-        int regionX = x * regionOffset;
-        int regionY = y * regionOffset;
-        int regionZ = z * regionOffset;
-
-        // 确保坐标在有效范围内 (0-255)
-        regionX = std::abs(regionX) % (256 - regionSize);
-        regionY = std::abs(regionY) % (256 - regionSize);
-        regionZ = std::abs(regionZ) % (256 - regionSize);
-
-        // 在区域内生成随机颜色
-        uint32_t hash = hashPoint(regionX, regionY, regionZ);
-        uint32_t baseColor = hashToColor(hash);
-
-        // 微调颜色，确保每个区域内的颜色也有差异
-        uint8_t r = (baseColor >> 16) & 0xFF;
-        uint8_t g = (baseColor >> 8) & 0xFF;
-        uint8_t b = baseColor & 0xFF;
-
-        // 使用index的低位进行微调
-        r = (r + (index * 17) % regionSize) % 256;
-        g = (g + (index * 23) % regionSize) % 256;
-        b = (b + (index * 29) % regionSize) % 256;
-
-        uint32_t finalColor = 0xFF000000 | (r << 16) | (g << 8) | b;
-
-        // 缓存结果
-        colorCache[index] = finalColor;
-        return finalColor;
-    }
-};
+int const MIN_AREA_PIXEL_COUNT = 100;
+const int lineColorThreshold = 10;
 
 // 全局生成器实例
-static ColorGenerator2 colorGenerator2;
+static ColorGenerator colorGenerator;
 
-// 判断像素是否为线条颜色 (C++版本)
-// 假设线条是黑色或深色，R, G, B 值都低于某个阈值
-bool isLineColor(uint32_t pixel, int threshold) {
-    uint8_t a = (pixel >> 24) & 0xFF;
-    if (a < 150) {
-        return false;
-    }
-    uint8_t r = (pixel >> 16) & 0xFF; // ARGB_8888
-    uint8_t g = (pixel >> 8) & 0xFF;
-    uint8_t b = pixel & 0xFF;
-    return r < threshold && g < threshold && b < threshold;
+bool isLineColor(uint32_t pixel);
+
+uint32_t getLuminanceInt(uint32_t pixel) {
+    uint32_t r = (pixel >> 16) & 0xff;
+    uint32_t g = (pixel >> 8) & 0xff;
+    uint32_t b = pixel & 0xff;
+    float luminance = 0.299f * static_cast<float>(r) + 0.587f * static_cast<float>(g) + 0.114f * static_cast<float>(b);
+    return static_cast<uint32_t >(luminance);
+}
+
+float getLuminance(uint32_t pixel) {
+    uint32_t r = (pixel >> 16) & 0xff;
+    uint32_t g = (pixel >> 8) & 0xff;
+    uint32_t b = pixel & 0xff;
+    float luminance = 0.299f * static_cast<float>(r) + 0.587f * static_cast<float>(g) + 0.114f * static_cast<float>(b);
+    return luminance / 255.0f;
+}
+
+inline float clamp(float value, float min, float max) {
+    if (value < min) return min;
+    if (value > max) return max;
+    return value;
 }
 
 
-extern "C" JNIEXPORT jobject JNICALL
-Java_com_zipper_gl_1vector_RegionCalculator_calculateRegions(JNIEnv *env, jobject thiz, jobject line_art_bitmap) {
+// 辅助函数：组合RGBA分量为像素
+inline uint32_t makeRGBA(int r, int g, int b, int a) {
+    return ((uint32_t) a << 24) | ((uint32_t) r << 16) | ((uint32_t) g << 8) | ((uint32_t) b << 0);
+}
 
-    AndroidBitmapInfo info;
-    void *pixels;
-    int ret;
+// 辅助函数：生成高斯核
+std::vector<float> createGaussianKernel(float radius) {
+    int size = (int) (radius * 2 + 1); // 核的大小
+    if (size % 2 == 0) size++; // 确保是奇数
+    std::vector<float> kernel(size * size);
+    float sigma = radius / 3.0f; // 经验值，可以调整
+    float sum = 0.0f;
+    int halfSize = size / 2;
 
-    // 获取Bitmap信息
-    if ((ret = AndroidBitmap_getInfo(env, line_art_bitmap, &info)) < 0) {
-        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
-        return nullptr;
+    for (int y = -halfSize; y <= halfSize; ++y) {
+        for (int x = -halfSize; x <= halfSize; ++x) {
+            float value = (1.0f / (2.0f * M_PI * sigma * sigma)) *
+                          exp(-(x * x + y * y) / (2.0f * sigma * sigma));
+            kernel[(y + halfSize) * size + (x + halfSize)] = value;
+            sum += value;
+        }
     }
 
-    // 检查Bitmap格式，目前只支持 ARGB_8888
-    if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
-        LOGE("Bitmap format is not RGBA_8888 !");
-        return nullptr;
+    // 归一化核
+    for (float &val: kernel) {
+        val /= sum;
     }
+    return kernel;
+}
 
-    // 锁定像素，直接访问像素数据
-    if ((ret = AndroidBitmap_lockPixels(env, line_art_bitmap, &pixels)) < 0) {
-        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
-        return nullptr;
-    }
+// 高斯模糊处理函数
+void applyGaussianBlur(uint32_t *pixels, int width, int height, float radius) {
+    std::vector<float> kernel = createGaussianKernel(radius);
+    int kernelSize = sqrt(kernel.size());
+    int halfKernelSize = kernelSize / 2;
 
-    long time = std::time(nullptr);
-    LOGD("开始计算");
-    auto *lineArtPixels = (uint32_t *) pixels; // 原始线稿像素
-    int width = static_cast<int>(info.width);
-    int height = static_cast<int>(info.height);
-
-    // 创建一个新的像素缓冲区用于存储蒙版结果
-    // 注意：这里分配了新的内存，需要确保在使用完后释放
-    auto *maskPixels = new uint32_t[width * height];
-    std::vector<int> regionIds(width * height, -1); // -1: NOT_VISITED
-
-    int currentRegionId = 0;
-    std::queue<Point> q;
+    // 创建一个缓冲区来存储模糊后的像素，避免修改原始像素时影响后续计算
+    std::vector<uint32_t> blurredPixels(width * height);
 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
-            uint32_t index = y * width + x;
-            uint32_t pixel = lineArtPixels[index];
+            float sumR = 0.0f, sumG = 0.0f, sumB = 0.0f, sumA = 0.0f;
 
-            if (isLineColor(pixel, lineColorThreshold)) {
-                // 线条，不作为可填充区域
-                regionIds[index] = -1;
-                // 蒙版图上线条区域设置为黑色
-                maskPixels[index] = 0xFF000000; // ARGB_8888 黑色
-                continue;
-            }
+            for (int ky = 0; ky < kernelSize; ++ky) {
+                for (int kx = 0; kx < kernelSize; ++kx) {
+                    int pixelX = x + (kx - halfKernelSize);
+                    int pixelY = y + (ky - halfKernelSize);
+                    pixelX = pixelX < 0 ? 0 : pixelX >= width ? width - 1 : pixelX;
+                    pixelY = pixelY < 0 ? 0 : pixelY >= height ? height - 1 : pixelY;
 
-            if (regionIds[index] == -1) { // 如果未访问过
-                q.push({x, y});
-                regionIds[index] = currentRegionId;
+                    uint32_t pixel = pixels[pixelY * width + pixelX];
+                    float kernelValue = kernel[ky * kernelSize + kx];
 
-                while (!q.empty()) {
-                    Point p = q.front();
-                    q.pop();
-
-                    // 检查相邻像素 (上、下、左、右)
-                    int dx[] = {0, 0, 1, -1};
-                    int dy[] = {1, -1, 0, 0};
-
-                    for (int i = 0; i < 4; ++i) {
-                        int nx = p.x + dx[i];
-                        int ny = p.y + dy[i];
-                        uint32_t nIndex = ny * width + nx;
-
-                        if (nx >= 0 && nx < width && ny >= 0 && ny < height &&
-                            regionIds[nIndex] == -1) { // 边界内且未访问过
-                            uint32_t neighborPixel = lineArtPixels[nIndex];
-
-                            if (!isLineColor(neighborPixel, lineColorThreshold)) {
-                                regionIds[nIndex] = currentRegionId;
-                                q.push({nx, ny});
-                            }
-                        }
-                    }
+                    sumA += ((pixel >> 24) & 0xFF) * kernelValue;
+                    sumR += ((pixel >> 16) & 0xFF) * kernelValue;
+                    sumG += ((pixel >> 8) & 0xFF) * kernelValue;
+                    sumB += (pixel & 0xFF) * kernelValue;
                 }
-                currentRegionId++;
             }
-            // 填充蒙版像素
-            // 将区域ID映射到灰度颜色，限制在0-255
-//            int grayValue = (regionIds[index] == -1) ? 0 : (regionIds[index] * 30) % 255;
-//            maskPixels[index] = (0xFF << 24) | (grayValue << 16) | (grayValue << 8) | grayValue; // ARGB_8888 灰度
-            maskPixels[index] = colorGenerator2.getColor(regionIds[index]);
+
+            blurredPixels[y * width + x] = makeRGBA(sumA, sumR, sumG, sumB);;
         }
     }
-    long end = std::time(nullptr) - time;
-    LOGD("计算完成, 耗时 = %ld", end);
 
-    // 解锁原始Bitmap的像素
-    AndroidBitmap_unlockPixels(env, line_art_bitmap);
-
-    // 创建一个新的Bitmap对象并设置像素
-    jclass bitmapClass = env->FindClass("android/graphics/Bitmap");
-    jmethodID createBitmapMethod = env->GetStaticMethodID(bitmapClass, "createBitmap",
-                                                          "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;");
-
-    // 获取 Bitmap.Config 枚举的实例
-    jclass configClass = env->FindClass("android/graphics/Bitmap$Config");
-    jfieldID argb8888Field = env->GetStaticFieldID(configClass, "ARGB_8888", "Landroid/graphics/Bitmap$Config;");
-    jobject argb8888Config = env->GetStaticObjectField(configClass, argb8888Field);
-
-    jobject resultBitmap = env->CallStaticObjectMethod(bitmapClass, createBitmapMethod, width, height, argb8888Config);
-
-    // 锁定新Bitmap的像素，将C++处理后的数据复制过去
-    void *resultPixels;
-    if ((ret = AndroidBitmap_lockPixels(env, resultBitmap, &resultPixels)) < 0) {
-        LOGE("AndroidBitmap_lockPixels() failed on resultBitmap ! error=%d", ret);
-        delete[] maskPixels; // 释放内存
-        return nullptr;
-    }
-    memcpy(resultPixels, maskPixels, width * height * sizeof(uint32_t));
-
-    AndroidBitmap_unlockPixels(env, resultBitmap);
-
-    delete[] maskPixels; // 释放C++中分配的像素内存
-
-    return resultBitmap;
+    // 将模糊后的像素复制回原始像素区域
+    std::copy(blurredPixels.begin(), blurredPixels.end(), pixels);
 }
+
+void storageLineArt(uint32_t *pixels, int width, int height) {
+//    applyGaussianBlur(pixels, width, height, 5);
+    // 高斯模糊
+    processBlur(pixels, width, height, 5);
+    for (int y = 0; y < height; ++y) {
+        for (int x = 0; x < width; ++x) {
+            uint32_t index = y * width + x;
+            uint32_t pixel = pixels[index];
+            uint32_t luminance = getLuminanceInt(pixels[index]);
+            if (luminance > 250) {
+                pixels[index] = 0xFFFFFFFF;
+            } else {
+                pixels[index] = 0xFF000000;
+            }
+//            pixels[index] = luminanceToColor(luminance < 50 ? 0 : luminance);
+            //LOGD("Luminance: %d, Pixel: %X -> %X", luminance, pixel, pixels[index]);
+        }
+    }
+    //processBlur(pixels, width, height, 3);
+
+//    auto *tempPixels = new uint32_t[width * height];
+//    for (int y = 0; y < height; ++y) {
+//        for (int x = 0; x < width; ++x) {
+//
+//            float sumR = 0.0f, sumG = 0.0f, sumB = 0.0f, sumA = 0.0f;
+//            float totalWeight = 0.0f;
+//
+//            // 考虑当前像素及其周围的8个像素（3x3区域）
+//            for (int dy = -1; dy <= 1; ++dy) {
+//                for (int dx = -1; dx <= 1; ++dx) {
+//                    int sampleX = x + dx;
+//                    int sampleY = y + dy;
+//                    sampleX = sampleX < 0 ? 0 : sampleX >= width ? width - 1 : sampleX;
+//                    sampleY = sampleY < 0 ? 0 : sampleY >= height ? height - 1 : sampleY;
+//
+//                    uint32_t pixel = pixels[sampleY * width + sampleX];
+//                    int a = (pixel >> 24) & 0xFF;
+//                    int r = (pixel >> 16) & 0xFF;
+//                    int g = (pixel >> 8) & 0xFF;
+//                    int b = pixel & 0xFF;
+//                    // 计算权重：这里使用一个简单的距离倒数作为权重，
+//                    // 距离越近权重越大。也可以使用高斯函数作为权重。
+//                    float distance = sqrtf(static_cast<float>(dx * dx + dy * dy));
+//                    float weight = (distance == 0.0f) ? 1.0f : 1.0f / distance; // 中心点权重最大
+//
+//                    sumA += a * weight;
+//                    sumR += r * weight;
+//                    sumG += g * weight;
+//                    sumB += b * weight;
+//                    totalWeight += weight;
+//                }
+//            }
+//
+//            // 避免除以零
+//            if (totalWeight == 0.0f) totalWeight = 1.0f; // 理论上不会发生
+//
+//            int avgA = static_cast<int>(sumA / totalWeight);
+//            int avgR = static_cast<int>(sumR / totalWeight);
+//            int avgG = static_cast<int>(sumG / totalWeight);
+//            int avgB = static_cast<int>(sumB / totalWeight);
+//
+//            // 钳制到0-255范围
+//            avgA = std::max(0, std::min(255, avgA));
+//            avgR = std::max(0, std::min(255, avgR));
+//            avgG = std::max(0, std::min(255, avgG));
+//            avgB = std::max(0, std::min(255, avgB));
+//
+//            tempPixels[y * width + x] = makeRGBA(avgR, avgG, avgB, avgA);
+//
+//        }
+//    }
+//    memcpy(pixels, tempPixels, width * height * sizeof(uint32_t));
+//    delete[] tempPixels;
+}
+
 extern "C"
 JNIEXPORT jint JNICALL
 Java_com_zipper_gl_1vector_RegionCalculator_regionGenerate(JNIEnv *env, jobject thiz, jobject line_art_bitmap, jobject mask_bitmap) {
-    AndroidBitmapInfo info;
+    AndroidBitmapInfo lineInfo;
     AndroidBitmapInfo maskInfo;
-    void *pixels;
-    void *pixels2;
     int ret;
-    // 获取Bitmap信息
-    if ((ret = AndroidBitmap_getInfo(env, line_art_bitmap, &info)) < 0) {
+    // 获取图片信息
+    if ((ret = AndroidBitmap_getInfo(env, line_art_bitmap, &lineInfo)) < 0) {
         LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
         return -1;
     }
-
-    // 检查Bitmap格式，目前只支持 ARGB_8888
-    if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
-        LOGE("Bitmap format is not RGBA_8888 !");
-        return -1;
-    }
-
-    // 获取Bitmap信息
     if ((ret = AndroidBitmap_getInfo(env, mask_bitmap, &maskInfo)) < 0) {
         LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
         return -1;
     }
 
     // 检查Bitmap格式，目前只支持 ARGB_8888
+    if (lineInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        LOGE("LineBitmap format is not RGBA_8888 !");
+        return -1;
+    }
     if (maskInfo.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
-        LOGE("Bitmap format is not RGBA_8888 !");
+        LOGE("MaskBitmap format is not RGBA_8888 !");
         return -1;
     }
 
     // 检查Bitmap尺寸
-    if (info.width != maskInfo.width || info.height != maskInfo.height) {
-        LOGE("Bitmap size is not equal to input image size !");
+    if (lineInfo.width != maskInfo.width || lineInfo.height != maskInfo.height) {
+        LOGE("LineBitmap and MaskBitmap size is not equal to input image size !");
         return -1;
     }
 
+    void *pixels, *pixels2;
+
     // 锁定像素，直接访问像素数据
     if ((ret = AndroidBitmap_lockPixels(env, line_art_bitmap, &pixels)) < 0) {
-        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+        LOGE("LineBitmap AndroidBitmap_lockPixels() failed ! error=%d", ret);
         return -1;
     }
     if ((ret = AndroidBitmap_lockPixels(env, mask_bitmap, &pixels2)) < 0) {
         AndroidBitmap_unlockPixels(env, line_art_bitmap);
-        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+        LOGE("MaskBitmap AndroidBitmap_lockPixels() failed ! error=%d", ret);
         return -1;
     }
-
-    LOGD("线稿区域生成，开始");
-    int width = static_cast<int>(info.width);
-    int height = static_cast<int>(info.height);
-
+    LOGD("开始");
+    int width = static_cast<int>(lineInfo.width);
+    int height = static_cast<int>(lineInfo.height);
     auto *linePixels = static_cast<uint32_t *>(pixels);
     auto *maskPixels = static_cast<uint32_t *>(pixels2);
-
+    // 区域标记
     std::vector<int> regionIds(width * height, -1);
-
     int currentRegionId = 0;
-    std::queue<Point> q;
+    std::queue<Point> areaPointQueue;
+    // 记录颜色对应的区域像素数量
     std::unordered_map<uint32_t, int> regionColorCount;
 
+    // 检查相邻像素 (上、下、左、右)
+    int dx[] = {0, 0, 1, -1};
+    int dy[] = {1, -1, 0, 0};
+
+    // 格式化
+    storageLineArt(linePixels, width, height);
 
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             uint32_t index = y * width + x;
             uint32_t pixel = linePixels[index];
-
-            if (isLineColor(pixel, lineColorThreshold)) {
-                // 线条，不作为可填充区域
+            if (isLineColor(pixel)) {
+                // 线条
                 regionIds[index] = -1;
-                // 蒙版图上线条区域设置为黑色
-                maskPixels[index] = 0xFF000000; // ARGB_8888 黑色
+                uint32_t a = (pixel >> 24) & 0xFF;
+                maskPixels[index] = (a << 24);
                 continue;
             }
+
             if (regionIds[index] == -1) {
-                // 未访问过的区域
-                q.push({x, y});
+                areaPointQueue.push({x, y});
                 regionIds[index] = currentRegionId;
-                int areaCount = 0;
+                // 当前区域像素数量
+                int areaPixelCount = 0;
 
-                while (!q.empty()) {
-                    auto p = q.front();
-                    q.pop();
-                    areaCount++;
+                while (!areaPointQueue.empty()) {
+                    auto p = areaPointQueue.front();
+                    areaPointQueue.pop();
+                    areaPixelCount++;
 
-                    // 检查相邻像素 (上、下、左、右)
-                    int dx[] = {0, 0, 1, -1};
-                    int dy[] = {1, -1, 0, 0};
-
-                    for (int i = 0; i < 4; i++) {
+                    for (int i = 0; i < 4; ++i) {
                         int nx = p.x + dx[i];
                         int ny = p.y + dy[i];
                         uint32_t nIndex = ny * width + nx;
-
+                        // 边界检查且未被访问过的区域
                         if (nx >= 0 && nx < width && ny >= 0 && ny < height && regionIds[nIndex] == -1) {
                             uint32_t neighborPixel = linePixels[nIndex];
-                            if (!isLineColor(neighborPixel, lineColorThreshold)) {
-                                regionIds[nIndex] = currentRegionId;
-                                q.push(Point({nx, ny}));
+                            float luminance = getLuminance(neighborPixel);
+//                            if (luminance != 0.0) {
+//                                neighborPixel = 0xFFFFFFF;
+//                            }
+                            // 未访问过的区域，是线条则跳过
+                            if (isLineColor(neighborPixel)) {
+                                continue;
                             }
+                            regionIds[nIndex] = currentRegionId;
+                            // 区域匹配
+                            areaPointQueue.push({nx, ny});
                         }
                     }
                 }
-                if (areaCount < 50) {
-                    LOGD("区域数量 = %d", areaCount);
-                    regionColorCount.insert({colorGenerator2.getColor(regionIds[index]), areaCount});
-                    // regionIdCount.insert({currentRegionId})
-                }
 
-                // 区域都访问完了
+                if (areaPixelCount < MIN_AREA_PIXEL_COUNT) {
+                    // 区域数量小的区域， 记录起来 color ： count
+                    regionColorCount.insert({colorGenerator.getColor(regionIds[index]), areaPixelCount});
+                }
+                // 当前区域访问完了
                 currentRegionId++;
             }
+
             int regionId = regionIds[index];
             if (regionId == -1) {
-                maskPixels[index] = 0xFF000000;
+                // 线条，保持原样
+                maskPixels[index] = linePixels[index];
             } else {
-                // 填充到蒙版
-                maskPixels[index] = colorGenerator2.getColor(regionIds[index]);
+                // 填充
+                maskPixels[index] = colorGenerator.getColor(regionId);
             }
         }
     }
+    LOGD("区域个数 = %d", currentRegionId);
 
+    // 小区域直接填充黑色
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             uint32_t index = y * width + x;
@@ -426,3 +340,27 @@ Java_com_zipper_gl_1vector_RegionCalculator_regionGenerate(JNIEnv *env, jobject 
 
     return 0;
 }
+
+bool isLineColor(uint32_t pixel) {
+    uint32_t a = pixel >> 24;
+    if (a < 2) {
+        return false;
+    }
+    uint32_t r = (pixel >> 16) & 0xff;
+    uint32_t g = (pixel >> 8) & 0xff;
+    uint32_t b = pixel & 0xff;
+//    float luminance = 0.299f * static_cast<float>(r) + 0.587f * static_cast<float>(g) + 0.114f * static_cast<float>(b);
+//    return luminance <= 1.0;
+    return r < lineColorThreshold && g < lineColorThreshold && b < lineColorThreshold;
+}
+
+//bool isLineColor(uint32_t pixel) {
+//    uint8_t a = (pixel >> 24) & 0xFF;
+//    if (a < 150) {
+//        return false;
+//    }
+//    uint8_t r = (pixel >> 16) & 0xFF; // ARGB_8888
+//    uint8_t g = (pixel >> 8) & 0xFF;
+//    uint8_t b = pixel & 0xFF;
+//    return r < lineColorThreshold && g < lineColorThreshold && b < lineColorThreshold;
+//}

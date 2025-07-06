@@ -18,8 +18,6 @@ object RegionCalculator {
     const val NOT_VISITED: Int = -1
     const val LINE_COLOR_THRESHOLD: Int = 10 // 假设线稿颜色RBG值低于此阈值
 
-    external fun calculateRegions(lineArtBitmap: Bitmap): Bitmap
-
     external fun regionGenerate(lineArtBitmap: Bitmap, maskBitmap: Bitmap): Int
 
     fun IntArray.resetX() {

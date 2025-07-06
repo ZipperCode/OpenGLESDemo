@@ -5,6 +5,7 @@ import com.zipper.gl_vector.GL
 import com.zipper.gl_vector.gl.ShaderProgram
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.nio.FloatBuffer
 
 /**
  *
@@ -55,12 +56,19 @@ abstract class BaseShader {
             .position(0)
     }
 
+    fun setVertexBuffer(vertex: FloatBuffer) {
+        vertexBuffer = vertex
+    }
+
     fun setTextureCoordinateBuffer(texture: FloatArray) {
         textureBuffer = ByteBuffer.allocateDirect(texture.size * 4)
             .order(ByteOrder.nativeOrder())
             .asFloatBuffer()
             .put(texture)
             .position(0)
+    }
+    fun setTextureCoordinateBuffer(texture: FloatBuffer) {
+        textureBuffer = texture
     }
 
     /**

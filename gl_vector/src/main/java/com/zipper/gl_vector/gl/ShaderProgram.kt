@@ -117,6 +117,13 @@ open class ShaderProgram(
         GL.glVertexAttribPointer(location, size, type, normalized, stride, buffer)
     }
 
+    fun setTexture(name: String, texture: GLTexture, index: Int) {
+        GL.glActiveTexture(GL.GL_TEXTURE0 + index)
+        texture.bind()
+        setUniform1i(name, index)
+    }
+
+
     fun setUniform1i(name: String, value: Int) {
         checkManaged()
         val location = fetchUniformLocation(name)

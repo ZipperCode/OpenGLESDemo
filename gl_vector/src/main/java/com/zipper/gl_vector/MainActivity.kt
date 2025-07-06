@@ -34,18 +34,23 @@ class MainActivity : AppCompatActivity() {
             register(render)
             Thread(Runnable {
                 val time = measureTimeMillis {
-                    val bitmap = BitmapFactory.decodeStream(assets.open("4.png"))
+                    val bitmap = BitmapFactory.decodeStream(assets.open("5.png"))
                     val maskBitmap = createBitmap(bitmap.width, bitmap.height)
                     val ret = RegionCalculator.regionGenerate(bitmap, maskBitmap)
                     println()
 
                     queueEvent {
+                        render.uploadLine(bitmap)
                         render.uploadMask(maskBitmap)
                         requestRender()
                     }
 
                     File(filesDir, "mask.png").outputStream().use {
                         maskBitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
+                    }
+
+                    File(filesDir, "line.png").outputStream().use {
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)
                     }
                 }
                 Log.d("BAAA", "耗时 = ${time}")
