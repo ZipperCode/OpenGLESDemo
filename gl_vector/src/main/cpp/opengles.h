@@ -28,9 +28,9 @@ const GLfloat TEX_COORDS[] = {
 class GLEnv {
 
 private:
-    EGLDisplay display;
-    EGLContext context;
-    EGLSurface surface;
+    EGLDisplay display = {};
+    EGLContext context = {};
+    EGLSurface surface = {};
 
 public:
     GLEnv();
@@ -47,7 +47,7 @@ GLuint compileShader(GLenum type, const char *source);
 
 GLuint linkProgram(GLuint vertexShader, GLuint fragmentShader);
 
-GLuint genTexture(int width, int height, uint32_t *pixels, GLenum minFilter, GLenum magFilter, GLenum wrapS, GLenum wrapT);
+GLuint genTexture(int width, int height, uint32_t *pixels, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT);
 
 inline bool checkFrameBufferStatus() {
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);

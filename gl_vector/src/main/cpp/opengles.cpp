@@ -143,7 +143,7 @@ GLuint linkProgram(GLuint vertexShader, GLuint fragmentShader) {
 }
 
 
-GLuint genTexture(int width, int height, uint32_t *pixels, GLenum minFilter, GLenum magFilter, GLenum wrapS, GLenum wrapT) {
+GLuint genTexture(int width, int height, uint32_t *pixels, GLint minFilter, GLint magFilter, GLint wrapS, GLint wrapT) {
     GLuint texture;
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);

@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
             register(render)
             Thread(Runnable {
                 val time = measureTimeMillis {
-                    val bitmap = BitmapFactory.decodeStream(assets.open("5.png"))
+                    val bitmap = BitmapFactory.decodeStream(assets.open("7.png"))
                     val maskBitmap = createBitmap(bitmap.width, bitmap.height)
                     val ret = RegionCalculator.regionGenerate(bitmap, maskBitmap)
                     println()

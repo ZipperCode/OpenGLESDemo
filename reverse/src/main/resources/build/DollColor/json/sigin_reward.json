@@ -1,0 +1,37 @@
+﻿[
+  {
+    "rewardResoucePath": "file:///android_asset/decalNew/wuping/10/new_stickers_10.png",
+    "siginUnlockDay": 1,
+    "rewardResouceName": "new_wuping_10"
+  },
+  {
+    "rewardResoucePath": "file:///android_asset/decalNew/shoushi/09/new_stickers_09.png",
+    "siginUnlockDay": 2,
+    "rewardResouceName": "new_shoushi_09"
+  },
+  {
+    "rewardResoucePath": "file:///android_asset/decalNew/wuping/09/new_stickers_09.png",
+    "siginUnlockDay": 3,
+    "rewardResouceName": "new_wuping_09"
+  },
+  {
+    "rewardResoucePath": "file:///android_asset/flameNew/04/border_1.png",
+    "siginUnlockDay": 4,
+    "rewardResouceName": "new_04"
+  },
+  {
+    "rewardResoucePath": "file:///android_asset/decalNew/wuping/11/new_stickers_11.png",
+    "siginUnlockDay": 5,
+    "rewardResouceName": "new_wuping_11"
+  },
+  {
+    "rewardResoucePath": "file:///android_asset/flameNew/05/border_1.png",
+    "siginUnlockDay": 6,
+    "rewardResouceName": "new_05"
+  },
+  {
+    "rewardResoucePath": "",
+    "siginUnlockDay": 7,
+    "rewardResouceName": "rabinbow_brush"
+  }
+]

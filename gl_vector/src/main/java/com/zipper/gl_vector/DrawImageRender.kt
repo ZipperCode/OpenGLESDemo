@@ -63,7 +63,7 @@ class DrawImageRender(
         lineShader.render(mvp)
         GL.glDisable(GL.GL_BLEND)
         val err = GL.glGetError()
-        Log.d("BAAA", "err2 = $err")
+        //Log.d("BAAA", "err2 = $err")
 //        colorShader.draw(identityMatrix)
     }
 

@@ -1,0 +1,782 @@
+[
+    {
+        "baseColor": "#ffbcaa",
+        "colorType": 1,
+        "colorBaseName": "free_color_20",
+        "childenColors": [
+            {
+                "childColor": "#ffe6e3"
+            },
+            {
+                "childColor": "#ffc9be"
+            },
+            {
+                "childColor": "#ffbcaa"
+            },
+            {
+                "childColor": "#f0ac99"
+            },
+            {
+                "childColor": "#f5bc9d"
+            },
+            {
+                "childColor": "#e99586"
+            },
+            {
+                "childColor": "#f79e85"
+            },
+            {
+                "childColor": "#d28873"
+            },
+            {
+                "childColor": "#ffaea3"
+            },
+            {
+                "childColor": "#f28f6f"
+            },
+            {
+                "childColor": "#dc8776"
+            },
+            {
+                "childColor": "#b05937"
+            },
+            {
+                "childColor": "#edbd91"
+            },
+            {
+                "childColor": "#a25e53"
+            },
+            {
+                "childColor": "#69281b"
+            },
+            {
+                "childColor": "#bc594e"
+            }
+        ]
+    },
+    {
+        "baseColor": "#de8900",
+        "colorType": 1,
+        "colorBaseName": "free_color_13",
+        "childenColors": [
+            {
+                "childColor": "#000000"
+            },
+            {
+                "childColor": "#ffffff"
+            },
+            {
+                "childColor": "#d63131"
+            },
+            {
+                "childColor": "#b34a00"
+            },
+            {
+                "childColor": "#de8900"
+            },
+            {
+                "childColor": "#f0b000"
+            },
+            {
+                "childColor": "#68bd00"
+            },
+            {
+                "childColor": "#058708"
+            },
+            {
+                "childColor": "#026850"
+            },
+            {
+                "childColor": "#009fad"
+            },
+            {
+                "childColor": "#007aa3"
+            },
+            {
+                "childColor": "#004f8c"
+            },
+            {
+                "childColor": "#0e189e"
+            },
+            {
+                "childColor": "#54119c"
+            },
+            {
+                "childColor": "#7c1d85"
+            },
+            {
+                "childColor": "#d92768"
+            }
+        ]
+    },
+    {
+        "baseColor": "#f76d84",
+        "colorType": 1,
+        "colorBaseName": "free_color_21",
+        "childenColors": [
+            {
+                "childColor": "#e5acbf"
+            },
+            {
+                "childColor": "#ffabab"
+            },
+            {
+                "childColor": "#f0939b"
+            },
+            {
+                "childColor": "#ee857f"
+            },
+            {
+                "childColor": "#ed6ea5"
+            },
+            {
+                "childColor": "#ed6f8b"
+            },
+            {
+                "childColor": "#c85179"
+            },
+            {
+                "childColor": "#c8475d"
+            },
+            {
+                "childColor": "#f76d84"
+            },
+            {
+                "childColor": "#d04747"
+            },
+            {
+                "childColor": "#e70034"
+            },
+            {
+                "childColor": "#c7465b"
+            },
+            {
+                "childColor": "#ca2f35"
+            },
+            {
+                "childColor": "#a12b0b"
+            },
+            {
+                "childColor": "#a22044"
+            },
+            {
+                "childColor": "#730000"
+            }
+        ]
+    },
+    {
+        "baseColor": "#ffda00",
+        "colorType": 1,
+        "colorBaseName": "free_color_22",
+        "childenColors": [
+            {
+                "childColor": "#fff6a1"
+            },
+            {
+                "childColor": "#ffd977"
+            },
+            {
+                "childColor": "#edc98f"
+            },
+            {
+                "childColor": "#ffda00"
+            },
+            {
+                "childColor": "#fbca4e"
+            },
+            {
+                "childColor": "#fab14f"
+            },
+            {
+                "childColor": "#f08302"
+            },
+            {
+                "childColor": "#b27400"
+            },
+            {
+                "childColor": "#edb400"
+            },
+            {
+                "childColor": "#e39210"
+            },
+            {
+                "childColor": "#d9a72e"
+            },
+            {
+                "childColor": "#e55e31"
+            },
+            {
+                "childColor": "#844f07"
+            },
+            {
+                "childColor": "#ad7d4c"
+            },
+            {
+                "childColor": "#b55210"
+            },
+            {
+                "childColor": "#5e3805"
+            }
+        ]
+    },
+    {
+        "baseColor": "#66ca32",
+        "colorType": 1,
+        "colorBaseName": "free_color_23",
+        "childenColors": [
+            {
+                "childColor": "#e8ebb0"
+            },
+            {
+                "childColor": "#cbda8d"
+            },
+            {
+                "childColor": "#adca67"
+            },
+            {
+                "childColor": "#b8da1b"
+            },
+            {
+                "childColor": "#afcca1"
+            },
+            {
+                "childColor": "#9cad51"
+            },
+            {
+                "childColor": "#66ca32"
+            },
+            {
+                "childColor": "#6b841d"
+            },
+            {
+                "childColor": "#9dff68"
+            },
+            {
+                "childColor": "#9ada5d"
+            },
+            {
+                "childColor": "#7fdf4d"
+            },
+            {
+                "childColor": "#4ec349"
+            },
+            {
+                "childColor": "#3ab56e"
+            },
+            {
+                "childColor": "#038962"
+            },
+            {
+                "childColor": "#006852"
+            },
+            {
+                "childColor": "#275e3a"
+            }
+        ]
+    },
+    {
+        "baseColor": "#88c6f2",
+        "colorType": 1,
+        "colorBaseName": "free_color_24",
+        "childenColors": [
+            {
+                "childColor": "#d2fff0"
+            },
+            {
+                "childColor": "#b5f0ff"
+            },
+            {
+                "childColor": "#afffe2"
+            },
+            {
+                "childColor": "#73f8f7"
+            },
+            {
+                "childColor": "#2bd9c2"
+            },
+            {
+                "childColor": "#88c6f2"
+            },
+            {
+                "childColor": "#6dc8c5"
+            },
+            {
+                "childColor": "#0097da"
+            },
+            {
+                "childColor": "#1ca5ad"
+            },
+            {
+                "childColor": "#39c1d7"
+            },
+            {
+                "childColor": "#085872"
+            },
+            {
+                "childColor": "#649ded"
+            },
+            {
+                "childColor": "#3964b2"
+            },
+            {
+                "childColor": "#207fad"
+            },
+            {
+                "childColor": "#002a47"
+            },
+            {
+                "childColor": "#242670"
+            }
+        ]
+    },
+    {
+        "baseColor": "#ad7ffb",
+        "colorType": 1,
+        "colorBaseName": "free_color_25",
+        "childenColors": [
+            {
+                "childColor": "#f0caff"
+            },
+            {
+                "childColor": "#c5a3bf"
+            },
+            {
+                "childColor": "#cd80b2"
+            },
+            {
+                "childColor": "#ad69c0"
+            },
+            {
+                "childColor": "#cebaef"
+            },
+            {
+                "childColor": "#9079af"
+            },
+            {
+                "childColor": "#a03df2"
+            },
+            {
+                "childColor": "#6a20a5"
+            },
+            {
+                "childColor": "#ad7ffb"
+            },
+            {
+                "childColor": "#754c82"
+            },
+            {
+                "childColor": "#6e4cdf"
+            },
+            {
+                "childColor": "#611a87"
+            },
+            {
+                "childColor": "#c331f7"
+            },
+            {
+                "childColor": "#892299"
+            },
+            {
+                "childColor": "#7c55bf"
+            },
+            {
+                "childColor": "#360e46"
+            }
+        ]
+    },
+    {
+        "baseColor": "#c7f9c5",
+        "colorBaseName": "free_color_26",
+        "colorBgImage": "powder_one",
+        "colorType": 3,
+        "childenColors": [
+            {
+                "childColor": "#fbf9d0"
+            },
+            {
+                "childColor": "#fae5b7"
+            },
+            {
+                "childColor": "#ffe594"
+            },
+            {
+                "childColor": "#fae5d1"
+            },
+            {
+                "childColor": "#f8d1d2"
+            },
+            {
+                "childColor": "#fbb5d3"
+            },
+            {
+                "childColor": "#ebc3e7"
+            },
+            {
+                "childColor": "#eba7e4"
+            },
+            {
+                "childColor": "#ccbcee"
+            },
+            {
+                "childColor": "#b89eef"
+            },
+            {
+                "childColor": "#d39eef"
+            },
+            {
+                "childColor": "#c7fac5"
+            },
+            {
+                "childColor": "#adf5e2"
+            },
+            {
+                "childColor": "#bdfc9b"
+            },
+            {
+                "childColor": "#a0dbf5"
+            },
+            {
+                "childColor": "#98aae2"
+            }
+        ]
+    },
+    {
+        "baseColor": "#ef8d34",
+        "colorBgImage": "powder_two",
+        "colorBaseName": "free_color_27",
+        "colorType": 3,
+        "childenColors": [
+            {
+                "childColor": "#f55142"
+            },
+            {
+                "childColor": "#f09dda"
+            },
+            {
+                "childColor": "#4292ed"
+            },
+            {
+                "childColor": "#f5933d"
+            },
+            {
+                "childColor": "#ffffa8"
+            },
+            {
+                "childColor": "#fee15f"
+            },
+            {
+                "childColor": "#6beafc"
+            },
+            {
+                "childColor": "#71c06f"
+            },
+            {
+                "childColor": "#b4fd4e"
+            },
+            {
+                "childColor": "#a764ee"
+            },
+            {
+                "childColor": "#eb5c69"
+            },
+            {
+                "childColor": "#fc7ebb"
+            },
+            {
+                "childColor": "#d4ff85"
+            },
+            {
+                "childColor": "#50f1cc"
+            },
+            {
+                "childColor": "#ffc3f7"
+            },
+            {
+                "childColor": "#b591f3"
+            }
+        ]
+    },
+    {
+        "baseColor": "#3d3f91",
+        "colorBgImage": "powder_three",
+        "colorBaseName": "free_color_28",
+        "colorType": 3,
+        "childenColors": [
+            {
+                "childColor": "#7e130a"
+            },
+            {
+                "childColor": "#c64d54"
+            },
+            {
+                "childColor": "#d195bf"
+            },
+            {
+                "childColor": "#b06830"
+            },
+            {
+                "childColor": "#d45937"
+            },
+            {
+                "childColor": "#4384a4"
+            },
+            {
+                "childColor": "#489587"
+            },
+            {
+                "childColor": "#87ba54"
+            },
+            {
+                "childColor": "#7fe29e"
+            },
+            {
+                "childColor": "#5fc9d9"
+            },
+            {
+                "childColor": "#1e438a"
+            },
+            {
+                "childColor": "#6f479f"
+            },
+            {
+                "childColor": "#af298a"
+            },
+            {
+                "childColor": "#4d67c8"
+            },
+            {
+                "childColor": "#543868"
+            },
+            {
+                "childColor": "#002f43"
+            }
+        ]
+    },
+    {
+        "baseColor": "#f3fbee",
+        "gradientColor": "#87d761",
+        "colorBaseName": "free_color_29",
+        "colorBgImage": "gradation_one",
+        "colorType": 2,
+        "childenColors": [
+            {
+                "childColor": "#ffefef,#fd5252"
+            },
+            {
+                "childColor": "#ffe3d9,#ff7248"
+            },
+            {
+                "childColor": "#ffeeda,#ff872a"
+            },
+            {
+                "childColor": "#fff4dc,#ffad2a"
+            },
+            {
+                "childColor": "#fffbd8,#ffed62"
+            },
+            {
+                "childColor": "#f3fbd8,#c1ee56"
+            },
+            {
+                "childColor": "#f4fbee,#8bd965"
+            },
+            {
+                "childColor": "#e2efe5,#448f54"
+            },
+            {
+                "childColor": "#effdf8,#5bd9b4"
+            },
+            {
+                "childColor": "#f5fdfd,#71dee2"
+            },
+            {
+                "childColor": "#dff0f3,#3c93a2"
+            },
+            {
+                "childColor": "#deebf3,#4183ab"
+            },
+            {
+                "childColor": "#f3f4fd,#6b7fd8"
+            },
+            {
+                "childColor": "#d8d4eb,#453996"
+            },
+            {
+                "childColor": "#f4edfe,#9362ef"
+            },
+            {
+                "childColor": "#f8ebfb,#c55fd6"
+            }
+        ]
+    },
+    {
+        "baseColor": "#e4657f",
+        "gradientColor": "#f5ee77",
+        "colorBaseName": "free_color_30",
+        "colorBgImage": "gradation_two",
+        "colorType": 2,
+        "childenColors": [
+            {
+                "childColor": "#fc996a,#b63262"
+            },
+            {
+                "childColor": "#fef082,#fd95d8"
+            },
+            {
+                "childColor": "#fcecd2,#f186a4"
+            },
+            {
+                "childColor": "#ffa34c,#fc2a3e"
+            },
+            {
+                "childColor": "#c0c615,#fcd584"
+            },
+            {
+                "childColor": "#c23e68,#ffe78f"
+            },
+            {
+                "childColor": "#f17273,#8475c5"
+            },
+            {
+                "childColor": "#f9a144,#bcc94a"
+            },
+            {
+                "childColor": "#fc8e9d,#ee44a6"
+            },
+            {
+                "childColor": "#b093f5,#fb95b0"
+            },
+            {
+                "childColor": "#d851a9,#fac471"
+            },
+            {
+                "childColor": "#ff616f,#fff9b9"
+            },
+            {
+                "childColor": "#f6ef7c,#fc9146"
+            },
+            {
+                "childColor": "#e66a85,#f6ef7d"
+            },
+            {
+                "childColor": "#f77380,#faa7e6"
+            },
+            {
+                "childColor": "#fec661,#ff6a81"
+            }
+        ]
+    },
+    {
+        "baseColor": "#d3a6fa",
+        "gradientColor": "#8cf8f2",
+        "colorBaseName": "free_color_31",
+        "colorBgImage": "gradation_three",
+        "colorType": 2,
+        "childenColors": [
+            {
+                "childColor": "#ff6a81,#64ced9"
+            },
+            {
+                "childColor": "#f79fe2,#73defb"
+            },
+            {
+                "childColor": "#9bfbc6,#f9f5a2"
+            },
+            {
+                "childColor": "#f0cfea,#958dd0"
+            },
+            {
+                "childColor": "#9585c5,#bde8ef"
+            },
+            {
+                "childColor": "#aed1fc,#e2f8d6"
+            },
+            {
+                "childColor": "#0b54fe,#a1fbb3"
+            },
+            {
+                "childColor": "#7d4cac,#6086ec"
+            },
+            {
+                "childColor": "#daf4d0,#30c6f4"
+            },
+            {
+                "childColor": "#bbaefe,#f7f2cc"
+            },
+            {
+                "childColor": "#6af6e4,#9872fc"
+            },
+            {
+                "childColor": "#f3bbf9,#1f54c8"
+            },
+            {
+                "childColor": "#d3a6fa,#8ef8f2"
+            },
+            {
+                "childColor": "#bfe8f2,#f4c8e8"
+            },
+            {
+                "childColor": "#83e9f2,#86adf3"
+            },
+            {
+                "childColor": "#62ace9,#a5fbdd"
+            }
+        ]
+    },
+    {
+        "baseColor": "#d3a6fa",
+        "gradientColor": "#8cf8f2",
+        "colorBaseName": "free_color_75",
+        "colorType": 4,
+        "childenColors": [
+            {
+                "shapeAssetsPath": "pingtu/1.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/2.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/3.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/4.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/5.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/6.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/7.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/8.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/9.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/10.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/11.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/12.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/13.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/14.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/15.png"
+            },
+            {
+                "shapeAssetsPath": "pingtu/16.png"
+            }
+        ]
+    }
+]

@@ -1,0 +1,389 @@
+{
+  "id": "c266af1c-19a5-400d-843b-ccd5a56700bf",
+  "name": "10001",
+  "coverPicName": "chushiwhite.png",
+  "bodyParts": [
+    {
+      "id": "0",
+      "name": "body",
+      "stepId": "-1",
+      "groups": [
+        {
+          "id": "0",
+          "name": "10001body",
+          "pics": [
+            {
+              "id": "1de39025-910b-4079-89b9-0defaaf0d803",
+              "name": "10001_bodynew.png",
+              "priority": 5,
+              "picName": "10001_bodynew.png",
+              "positionX": 354,
+              "positionY": 57,
+              "width": 315,
+              "height": 909
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "1",
+      "name": "arms",
+      "stepId": "-2",
+      "groups": [
+        {
+          "id": "1",
+          "name": "10001arms",
+          "pics": [
+            {
+              "id": "d28a8730-ac5d-4948-9c79-bcee5cd7ecc3",
+              "name": "chushiwhitearm.png",
+              "priority": 15,
+              "picName": "chushiwhitearm.png",
+              "positionX": 354,
+              "positionY": 281,
+              "width": 315,
+              "height": 285
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "hair",
+      "stepId": "0",
+      "groups": [
+        {
+          "id": "2",
+          "name": "10001hair",
+          "pics": [
+            {
+              "id": "a2488203-f433-42c1-92bf-2102d601dc8d",
+              "name": "0001chushihair.png",
+              "priority": 10,
+              "picName": "0001chushihair.png",
+              "positionX": 425,
+              "positionY": 6,
+              "width": 182,
+              "height": 219
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "3",
+      "name": "eyes",
+      "stepId": "1",
+      "groups": [
+        {
+          "id": "3",
+          "name": "10001eyes",
+          "pics": [
+            {
+              "id": "58ad381a-558b-4a13-b3d6-1897465025a4",
+              "name": "whiteeyes.png",
+              "priority": 2,
+              "picName": "whiteeyes.png",
+              "positionX": 462,
+              "positionY": 116,
+              "width": 126,
+              "height": 61
+            },
+            {
+              "id": "04c7513f-ab08-477e-81a4-42cbf1246c9e",
+              "name": "0001_left_eye.png",
+              "priority": 3,
+              "picName": "0001_left_eye.png",
+              "positionX": 478,
+              "positionY": 146,
+              "width": 27,
+              "height": 29
+            },
+            {
+              "id": "f3bfc0c4-bcb6-468e-85f8-1b51df75b523",
+              "name": "0001_right_eye.png",
+              "priority": 4,
+              "picName": "0001_right_eye.png",
+              "positionX": 541,
+              "positionY": 140,
+              "width": 27,
+              "height": 28
+            },
+            {
+              "id": "d97b5ee9-d827-408a-a562-a379d15d6d60",
+              "name": "0001_eye_open.png",
+              "priority": 8,
+              "picName": "0001_eye_open.png",
+              "positionX": 445,
+              "positionY": 112,
+              "width": 156,
+              "height": 95
+            },
+            {
+              "id": "2fe3691f-1389-40f5-84fc-349b32137fe7",
+              "name": "0001_eye_close.png",
+              "priority": 9,
+              "picName": "0001_eye_close.png",
+              "positionX": 445,
+              "positionY": 112,
+              "width": 156,
+              "height": 95
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "4",
+      "name": "eyebrow",
+      "stepId": "2",
+      "groups": [
+        {
+          "id": "4",
+          "name": "10001eyebrow",
+          "pics": [
+            {
+              "id": "b6d626c7-9ba6-4512-add8-cf5cf9deef62",
+              "name": "0001_eyebrow.png",
+              "priority": 9,
+              "picName": "0001_eyebrow.png",
+              "positionX": 458,
+              "positionY": 120,
+              "width": 124,
+              "height": 27
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "5",
+      "name": "mouth",
+      "stepId": "3",
+      "groups": [
+        {
+          "id": "5",
+          "name": "10001mouth",
+          "pics": [
+            {
+              "id": "e2509a3e-11ea-4633-a072-da71a3603bea",
+              "name": "0001_mouth.png",
+              "priority": 7,
+              "picName": "0001_mouth.png",
+              "positionX": 506,
+              "positionY": 182,
+              "width": 41,
+              "height": 30
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "6",
+      "name": "dress",
+      "stepId": "4",
+      "groups": []
+    },
+    {
+      "id": "7",
+      "name": "shirt",
+      "stepId": "5",
+      "groups": [
+        {
+          "id": "6",
+          "name": "10001shirt",
+          "pics": [
+            {
+              "id": "27cd0162-fe2f-46c8-be39-aacbc6575aaf",
+              "name": "chusihshirt.png",
+              "priority": 12,
+              "picName": "chusihshirt.png",
+              "positionX": 444,
+              "positionY": 235,
+              "width": 136,
+              "height": 157
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "8",
+      "name": "pants",
+      "stepId": "6",
+      "groups": [
+        {
+          "id": "7",
+          "name": "10001pants",
+          "pics": [
+            {
+              "id": "16faddd3-57bc-4603-ab4d-c637e55fe9b5",
+              "name": "chushipants.png",
+              "priority": 13,
+              "picName": "chushipants.png",
+              "positionX": 405,
+              "positionY": 430,
+              "width": 189,
+              "height": 103
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "9",
+      "name": "socks",
+      "stepId": "7",
+      "groups": []
+    },
+    {
+      "id": "10",
+      "name": "shoes",
+      "stepId": "8",
+      "groups": []
+    },
+    {
+      "id": "11",
+      "name": "Head Wear",
+      "stepId": "9",
+      "groups": []
+    },
+    {
+      "id": "12",
+      "name": "In Hand",
+      "stepId": "10",
+      "groups": []
+    },
+    {
+      "id": "13",
+      "name": "ershi",
+      "stepId": "11",
+      "groups": []
+    },
+    {
+      "id": "14",
+      "name": "jingshi",
+      "stepId": "12",
+      "groups": []
+    },
+    {
+      "id": "15",
+      "name": "shoushi",
+      "stepId": "13",
+      "groups": []
+    }
+  ],
+  "processes": [
+    {
+      "id": "0",
+      "name": "Head",
+      "steps": [
+        {
+          "id": "0",
+          "name": "hair",
+          "stepIconPath": "comImages/ic_hair_nor.png",
+          "stepIconPrePath": "comImages/ic_hair_pre.png",
+          "mutexBodyPartIds": ""
+        },
+        {
+          "id": "1",
+          "name": "eyes",
+          "stepIconPath": "comImages/ic_eye_nor.png",
+          "stepIconPrePath": "comImages/ic_eye_pre.png",
+          "mutexBodyPartIds": ""
+        },
+        {
+          "id": "2",
+          "name": "eyebrow",
+          "stepIconPath": "comImages/ic_eyebrow_nor.png",
+          "stepIconPrePath": "comImages/ic_eyebrow_pre.png",
+          "mutexBodyPartIds": ""
+        },
+        {
+          "id": "3",
+          "name": "mouth",
+          "stepIconPath": "comImages/ic_mouth_nor.png",
+          "stepIconPrePath": "comImages/ic_mouth_pre.png",
+          "mutexBodyPartIds": ""
+        }
+      ]
+    },
+    {
+      "id": "1",
+      "name": "Clothing",
+      "steps": [
+        {
+          "id": "4",
+          "name": "dress",
+          "stepIconPath": "comImages/ic_dress_nor.png",
+          "stepIconPrePath": "comImages/ic_dress_pre.png",
+          "mutexBodyPartIds": ""
+        },
+        {
+          "id": "5",
+          "name": "jacket",
+          "stepIconPath": "comImages/ic_jacket_nor.png",
+          "stepIconPrePath": "comImages/ic_jacket_pre.png",
+          "mutexBodyPartIds": ""
+        },
+        {
+          "id": "6",
+          "name": "pants",
+          "stepIconPath": "comImages/ic_trousers_nor.png",
+          "stepIconPrePath": "comImages/ic_trousers_pre.png",
+          "mutexBodyPartIds": ""
+        },
+        {
+          "id": "7",
+          "name": "socks",
+          "stepIconPath": "comImages/ic_stockings_nor.png",
+          "stepIconPrePath": "comImages/ic_stockings_pre.png",
+          "mutexBodyPartIds": ""
+        },
+        {
+          "id": "8",
+          "name": "shoes",
+          "stepIconPath": "comImages/ic_dress_shoes_nor.png",
+          "stepIconPrePath": "comImages/ic_dress_shoes_pre.png",
+          "mutexBodyPartIds": ""
+        }
+      ]
+    },
+    {
+      "id": "2",
+      "name": "Decorate",
+      "steps": [
+        {
+          "id": "9",
+          "name": "Head Wear",
+          "stepIconPath": "comImages/ic_cap_nor.png",
+          "stepIconPrePath": "comImages/ic_cap_pre.png",
+          "mutexBodyPartIds": ""
+        },
+        {
+          "id": "11",
+          "name": "ershi",
+          "mutexBodyPartIds": ""
+        },
+        {
+          "id": "12",
+          "name": "jingshi",
+          "mutexBodyPartIds": ""
+        },
+        {
+          "id": "13",
+          "name": "shoushi",
+          "mutexBodyPartIds": ""
+        },
+        {
+          "id": "10",
+          "name": "In Hand",
+          "mutexBodyPartIds": ""
+        }
+      ]
+    }
+  ]
+}

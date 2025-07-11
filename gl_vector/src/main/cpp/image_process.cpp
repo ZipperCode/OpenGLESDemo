@@ -28,7 +28,7 @@ const char *BLUR_FRAGMENT_CODE = R"(
 precision mediump float;
 
 uniform sampler2D uTexture;
-uniform int uKernelSize;
+uniform float uBlurRadius;
 uniform vec2 uImageSize;
 uniform bool uHorizontal;
 
@@ -40,10 +40,12 @@ out vec4 fragColor;
 
 void main() {
     vec4 sum = vec4(0.0);
+    float sumGray = 0.0;
     vec2 oneTexel = vec2(1.0) / uImageSize;
-    float halfKernelSize = uKernelSize * 0.5;
-    for (int i = 0; i < uKernelSize; i++) {
-        int offsetIndex = i - halfKernelSize;
+    int radiusInt = int(uBlurRadius);
+    for (int i = 0; i < MAX_KERNEL_SIZE; i++) {
+        if (i >= 2 * radiusInt + 1) break;
+        int offsetIndex = i - radiusInt;
         vec2 offset = vec2(0.0);
         if (uHorizontal) {
             offset.x = float(offsetIndex) * oneTexel.x;
@@ -51,9 +53,10 @@ void main() {
             offset.y = float(offsetIndex) * oneTexel.y;
         }
         vec2 sampleCoord = clamp(vTextureCoordinate + offset, vec2(0.0), vec2(1.0));
-        sum += texture(uTexture, sampleCoord) * uKernel[i];
+        float gray = dot(texture(uTexture, sampleCoord).rgb, vec3(0.2126, 0.7152, 0.0722));
+        sumGray += gray * uKernel[i];
     }
-    fragColor = sum;
+    fragColor = vec4(sumGray, sumGray, sumGray, 1.0);
 }
 )";
 
@@ -68,14 +71,13 @@ out vec4 fragColor;
 void main() {
     vec4 color = texture(uTexture, vTextureCoordinate);
     float luminance = dot(color.rgb, vec3(0.2126, 0.7152, 0.0722));
-    if (luminance < 0.5) {
+    if (luminance < 0.9) {
         fragColor = vec4(0.0, 0.0, 0.0, 1.0);
     } else {
         fragColor = vec4(1.0, 1.0, 1.0, 1.0);
     }
 }
 )";
-
 
 
 // 计算高斯核
@@ -97,43 +99,16 @@ std::vector<float> genGaussianKernel(int radius, float sigma) {
     return kernel;
 }
 
-struct GLBlurContext {
-    GLEnv *env;
-    GLuint program;
-    // 要处理的图片纹理
-    GLuint originalTexture;
-    // 纹理用于FBO
-    GLuint fboTexture;
-    GLuint framebuffer;
-
-    // uniform locations
-    GLint uTextureLoc;
-    GLint uImageSizeLoc;
-    GLint uKernelSizeLoc;
-    GLint uKernelLoc;
-    GLint uHorizontal;
-
-    GLuint vao; // 顶点数组对象, 绑定顶点时只需要绑定vao，ES3使用
-    GLuint vbo[2]; // 0: vertices, 1: texture coordinates
-
-    void release() {
-        glDeleteTextures(1, &originalTexture);
-        glDeleteTextures(1, &fboTexture);
-        glDeleteFramebuffers(1, &framebuffer);
-        glDeleteProgram(program);
-    }
-};
-
 class GLContext {
 public:
     GLuint program = -1;
-    GLuint vao; // 顶点数组对象, 绑定顶点时只需要绑定vao，ES3使用
-    GLuint vbo[2]; // 0: vertices, 1: texture coordinates
+    GLuint vao{}; // 顶点数组对象, 绑定顶点时只需要绑定vao，ES3使用
+    GLuint vbo[2]{}; // 0: vertices, 1: texture coordinates
     // 要处理的图片纹理
-    GLuint originalTexture;
+    GLuint originalTexture{};
     // 纹理用于FBO
-    GLuint fboTexture;
-    GLuint framebuffer;
+    GLuint fboTexture{};
+    GLuint framebuffer{};
 
     // uniform locations
     GLint uTextureLoc;
@@ -154,19 +129,21 @@ public:
         glUseProgram(this->program);
         this->uTextureLoc = glGetUniformLocation(program, "uTexture");
         initVertex();
+        // 帧缓冲
+        glGenFramebuffers(1, &framebuffer);
     }
 
     ~GLContext() {
         glDeleteProgram(this->program);
     }
 
-    void bindOriginTexture() {
+    void bindOriginTexture() const {
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, this->originalTexture);
         glUniform1i(this->uTextureLoc, 0);
     }
 
-    bool available() {
+    bool available() const {
         return this->program > 0;
     }
 
@@ -178,14 +155,14 @@ private:
 
         glBindVertexArray(this->vao);
 
-        // vertex
-        glBindBuffer(GL_ARRAY_BUFFER, this->vbo[0]);
+        // Vertex data
+        glBindBuffer(GL_ARRAY_BUFFER, vbo[0]);
         glBufferData(GL_ARRAY_BUFFER, sizeof(VERTICES), VERTICES, GL_STATIC_DRAW);
         glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void *) 0);
         glEnableVertexAttribArray(0);
 
-        // texture coordinate
-        glBindBuffer(GL_ARRAY_BUFFER, this->vbo[1]);
+        // Texture coordinate data
+        glBindBuffer(GL_ARRAY_BUFFER, vbo[1]);
         glBufferData(GL_ARRAY_BUFFER, sizeof(TEX_COORDS), TEX_COORDS, GL_STATIC_DRAW);
         glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void *) 0);
         glEnableVertexAttribArray(1);
@@ -194,55 +171,29 @@ private:
     }
 };
 
-GLBlurContext *initBlurContext(GLEnv *env) {
-    if (!env->makeCurrent()) {
-        return nullptr;
+class GLBlurContext : public GLContext {
+public:
+    // uniform locations
+    GLint uImageSizeLoc{};
+    GLint uBlurRadiusLoc{};
+    GLint uKernelLoc{};
+    GLint uHorizontalLoc{};
+
+    GLBlurContext() : GLContext(VERTEX_CODE, BLUR_FRAGMENT_CODE) {
+        uImageSizeLoc = glGetUniformLocation(program, "uImageSize");
+        uBlurRadiusLoc = glGetUniformLocation(program, "uBlurRadius");
+        uKernelLoc = glGetUniformLocation(program, "uKernel");
+        uHorizontalLoc = glGetUniformLocation(program, "uHorizontal");
     }
-    GLBlurContext *context = new GLBlurContext();
 
-    GLuint vertexShader = compileShader(GL_VERTEX_SHADER, VERTEX_CODE);
-    GLuint fragmentShader = compileShader(GL_FRAGMENT_SHADER, BLUR_FRAGMENT_CODE);
-    if (vertexShader <= 0 || fragmentShader <= 0) {
-        LOGE("initBlurContext, compileShader error");
-        delete context;
-        return nullptr;
+    ~GLBlurContext() {
+        glDeleteTextures(1, &originalTexture);
+        glDeleteTextures(1, &fboTexture);
+        glDeleteFramebuffers(1, &framebuffer);
+        glDeleteProgram(program);
     }
-    GLuint program = linkProgram(vertexShader, fragmentShader);
-    if (program <= 0) {
-        LOGE("initBlurContext, linkProgram error");
-        delete context;
-        return nullptr;
-    }
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    glUseProgram(program);
-    context->uTextureLoc = glGetUniformLocation(program, "uTexture");
-    context->uImageSizeLoc = glGetUniformLocation(program, "uImageSize");
-    context->uKernelSizeLoc = glGetUniformLocation(program, "uKernelSize");
-    context->uKernelLoc = glGetUniformLocation(program, "uKernel");
 
-    // 顶点数据
-    glGenBuffers(2, context->vbo);
-    glGenVertexArrays(1, &context->vao);
-
-    glBindVertexArray(context->vao);
-
-    // vertex
-    glBindBuffer(GL_ARRAY_BUFFER, context->vbo[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(VERTICES), VERTICES, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, (void *) 0);
-    glEnableVertexAttribArray(0);
-
-    // texture coordinate
-    glBindBuffer(GL_ARRAY_BUFFER, context->vbo[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(TEX_COORDS), TEX_COORDS, GL_STATIC_DRAW);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, (void *) 0);
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
-    LOGD("initBlurContext 成功 是否存在错误 = %x", eglGetError());
-    return context;
-}
+};
 
 int imageBlur(GLEnv *env, uint32_t *pixels, int width, int height, int radius) {
     if (pixels == nullptr || width <= 0 || height <= 0) {
@@ -250,17 +201,16 @@ int imageBlur(GLEnv *env, uint32_t *pixels, int width, int height, int radius) {
         return -1;
     }
     LOGD("imageBlur width = %d, height = %d, radius = %d", width, height, radius);
-    GLBlurContext *context = initBlurContext(env);
-    if (context == nullptr) {
+    if (!env || !env->makeCurrent()) {
+        LOGE("imageBlur makeCurrent error.");
         return -1;
     }
+    auto *context = new GLBlurContext();
     float sigma = static_cast<float>(radius) / 3.0f;
     std::vector<float> kernel = genGaussianKernel(radius, sigma);
     LOGD("Kernel size: %d", static_cast<int>(kernel.size()));
     // 原图纹理
     context->originalTexture = genTexture(width, height, pixels, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
-    // 帧缓冲
-    glGenFramebuffers(1, &context->framebuffer);
     context->fboTexture = genTexture(width, height, nullptr, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
     // 临时缓冲纹理
     GLuint tempTexture = genTexture(width, height, nullptr, GL_LINEAR, GL_LINEAR, GL_CLAMP_TO_EDGE, GL_CLAMP_TO_EDGE);
@@ -270,15 +220,14 @@ int imageBlur(GLEnv *env, uint32_t *pixels, int width, int height, int radius) {
     glBindVertexArray(context->vao);
     glBindFramebuffer(GL_FRAMEBUFFER, context->framebuffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tempTexture, 0);
-    if (checkFrameBufferStatus()) {
+    if (!checkFrameBufferStatus()) {
         LOGE("imageBlur tempTexture bind Framebuffer is not complete!");
         glDeleteTextures(1, &tempTexture);
-        context->release();
         delete context;
         return -1;
     }
-
-    GLfloat *size = new GLfloat[2]{width * 1.0f, height * 1.0f};
+    LOGD("开始水平高斯模糊 = %x", glGetError());
+    GLfloat size[2] = {static_cast<GLfloat>(width), static_cast<GLfloat>(height)};
 
     // 水平高斯模糊
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
@@ -288,39 +237,40 @@ int imageBlur(GLEnv *env, uint32_t *pixels, int width, int height, int radius) {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, context->originalTexture);
     glUniform1i(context->uTextureLoc, 0);
-    glUniform1i(context->uKernelSizeLoc, static_cast<int>(radius / 2));
-    glUniform1fv(context->uImageSizeLoc, 2, size);
-    glUniform1fv(context->uKernelLoc, kernel.size(), kernel.data());
-    glUniform1i(context->uHorizontal, 1);
+    glUniform1f(context->uBlurRadiusLoc, static_cast<float >(radius));
+    glUniform2fv(context->uImageSizeLoc, 1, size);
+    glUniform1fv(context->uKernelLoc, static_cast<GLsizei>(kernel.size()), kernel.data());
+    glUniform1i(context->uHorizontalLoc, 1);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
+    // 最终缓冲区
     glBindFramebuffer(GL_FRAMEBUFFER, context->framebuffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, context->fboTexture, 0);
     if (!checkFrameBufferStatus()) {
         LOGE("imageBlur fboTexture bind Framebuffer is not complete!");
         glDeleteTextures(1, &tempTexture);
-        context->release();
         delete context;
         return -1;
     }
-
+    LOGD("开始垂直高斯模糊 = %x", glGetError());
     // 垂直
     glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    glUseProgram(context->program);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, context->originalTexture);
-    glUniform1i(context->uTextureLoc, 0);
-    glUniform1i(context->uKernelSizeLoc, static_cast<int>(radius / 2));
-    glUniform1fv(context->uImageSizeLoc, 2, size);
-    glUniform1fv(context->uKernelLoc, kernel.size(), kernel.data());
-    glUniform1i(context->uHorizontal, 0);
+    //glUseProgram(context->program);
+//    glActiveTexture(GL_TEXTURE0);
+//    glBindTexture(GL_TEXTURE_2D, context->originalTexture);
+//    glUniform1i(context->uTextureLoc, 0);
+//    glUniform1f(context->uBlurRadiusLoc, static_cast<float >(radius));
+//    glUniform1fv(context->uImageSizeLoc, 1, size);
+//    glUniform1fv(context->uKernelLoc, static_cast<GLsizei>(kernel.size()), kernel.data());
+    glUniform1i(context->uHorizontalLoc, 0);
     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
+    glUseProgram(0);
+    LOGD("开始读取像素 = %x", glGetError());
     // 读取像素
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    LOGD("imageBlur finish hasError = %x", glGetError());
 
     delete context;
     return 0;
@@ -345,10 +295,12 @@ public:
  */
 int storageLineArt(GLEnv *env, uint32_t *pixels, int width, int height) {
     if (!env || !env->makeCurrent()) {
+        LOGE("storageLineArt, makeCurrent error");
         return -1;
     }
-    StorageLineArtContext *context = new StorageLineArtContext(VERTEX_CODE, STORAGE_FRAGMENT_SHADER);
+    auto *context = new StorageLineArtContext(VERTEX_CODE, STORAGE_FRAGMENT_SHADER);
     if (!context->available()) {
+        LOGE("StorageLineArtContext init failed.");
         delete context;
         return -1;
     }
@@ -362,7 +314,7 @@ int storageLineArt(GLEnv *env, uint32_t *pixels, int width, int height) {
 
     glBindFramebuffer(GL_FRAMEBUFFER, context->framebuffer);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, context->fboTexture, 0);
-    if (checkFrameBufferStatus()) {
+    if (!checkFrameBufferStatus()) {
         LOGE("storageLineArt tempTexture bind Framebuffer is not complete!");
         glDeleteTextures(1, &context->fboTexture);
         delete context;
@@ -376,7 +328,7 @@ int storageLineArt(GLEnv *env, uint32_t *pixels, int width, int height) {
     // 读取像素
     glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    LOGD("storageLineArt finish isError = %x", glGetError());
     delete context;
     return 0;
 }

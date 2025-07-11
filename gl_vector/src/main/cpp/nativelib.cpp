@@ -20,8 +20,8 @@ struct Point {
     int x, y;
 };
 
-int const MIN_AREA_PIXEL_COUNT = 100;
-const int lineColorThreshold = 10;
+int const MIN_AREA_PIXEL_COUNT = 10;
+const int lineColorThreshold = 100;
 
 // 全局生成器实例
 static ColorGenerator colorGenerator;
@@ -121,14 +121,19 @@ void applyGaussianBlur(uint32_t *pixels, int width, int height, float radius) {
 
 void storageLineArt(uint32_t *pixels, int width, int height) {
 //    applyGaussianBlur(pixels, width, height, 5);
+//    GLEnv env;
+//    imageBlur(&env, pixels, width, height, 5);
+//    storageLineArt(&env, pixels, width, height);
+//    imageBlur(&env, pixels, width, height, 2);
+//
     // 高斯模糊
-    processBlur(pixels, width, height, 5);
+    //processBlur(pixels, width, height, 5);
     for (int y = 0; y < height; ++y) {
         for (int x = 0; x < width; ++x) {
             uint32_t index = y * width + x;
             uint32_t pixel = pixels[index];
             uint32_t luminance = getLuminanceInt(pixels[index]);
-            if (luminance > 250) {
+            if (luminance > 150) {
                 pixels[index] = 0xFFFFFFFF;
             } else {
                 pixels[index] = 0xFF000000;
@@ -137,7 +142,7 @@ void storageLineArt(uint32_t *pixels, int width, int height) {
             //LOGD("Luminance: %d, Pixel: %X -> %X", luminance, pixel, pixels[index]);
         }
     }
-    //processBlur(pixels, width, height, 3);
+//    processBlur(pixels, width, height, 3);
 
 //    auto *tempPixels = new uint32_t[width * height];
 //    for (int y = 0; y < height; ++y) {
@@ -288,7 +293,7 @@ Java_com_zipper_gl_1vector_RegionCalculator_regionGenerate(JNIEnv *env, jobject 
                         if (nx >= 0 && nx < width && ny >= 0 && ny < height && regionIds[nIndex] == -1) {
                             uint32_t neighborPixel = linePixels[nIndex];
                             float luminance = getLuminance(neighborPixel);
-//                            if (luminance != 0.0) {
+//                            if (luminance >= 0.5) {
 //                                neighborPixel = 0xFFFFFFF;
 //                            }
                             // 未访问过的区域，是线条则跳过
@@ -328,7 +333,7 @@ Java_com_zipper_gl_1vector_RegionCalculator_regionGenerate(JNIEnv *env, jobject 
             uint32_t index = y * width + x;
             uint32_t pixel = maskPixels[index];
             int count = regionColorCount[pixel];
-            if(count > 0) {
+            if (count > 0) {
                 maskPixels[index] = 0xFF000000;
             }
         }

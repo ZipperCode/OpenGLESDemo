@@ -1,0 +1,34 @@
+﻿[
+  {
+    "sealShapePath": "file:///android_asset/seals/seal_star.png",
+    "sealSmallIconePath": "file:///android_asset/seals/icons/seal_star_1.png"
+  },
+  {
+    "sealShapePath": "file:///android_asset/seals/seal_heart.png",
+    "sealSmallIconePath": "file:///android_asset/seals/icons/seal_heart_2.png"
+  },
+  {
+    "sealShapePath": "file:///android_asset/seals/seal_butterfly.png",
+    "sealSmallIconePath": "file:///android_asset/seals/icons/seal_butterfly_3.png"
+  },
+  {
+    "sealShapePath": "file:///android_asset/seals/seal_clover.png",
+    "sealSmallIconePath": "file:///android_asset/seals/icons/seal_clover_4.png"
+  },
+  {
+    "sealShapePath": "file:///android_asset/seals/seal_snowflake.png",
+    "sealSmallIconePath": "file:///android_asset/seals/icons/seal_snowflake_5.png"
+  },
+  {
+    "sealShapePath": "file:///android_asset/seals/seal_fireworks.png",
+    "sealSmallIconePath": "file:///android_asset/seals/icons/seal_fireworks_6.png"
+  },
+  {
+    "sealShapePath": "file:///android_asset/seals/seal_fish.png",
+    "sealSmallIconePath": "file:///android_asset/seals/icons/seal_fish_7.png"
+  },
+  {
+    "sealShapePath": "file:///android_asset/seals/seal_flower.png",
+    "sealSmallIconePath": "file:///android_asset/seals/icons/seal_flower_8.png"
+  }
+]

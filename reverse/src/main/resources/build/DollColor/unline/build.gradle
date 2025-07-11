@@ -1,0 +1,47 @@
+task buildCovers(){
+    String names= ",";
+    // 指定目录创建文件树对象
+    FileTree tree = fileTree(dir: 'covers')
+    // 遍历文件树的所有文件
+    tree.each {File file ->
+//        println file
+        names+="${file.name},"
+    }
+    File configFile = file('covers.txt')
+    configFile.createNewFile();
+    configFile.write(names);
+    println names
+}
+
+task buildZips(){
+    String names= ",";
+    // 指定目录创建文件树对象
+    FileTree tree = fileTree(dir: 'zips')
+    // 遍历文件树的所有文件
+    tree.each {File file ->
+//        println file
+        names+="${file.name},"
+    }
+    File configFile = file('zips.txt')
+    configFile.createNewFile();
+    configFile.write(names);
+    println names
+}
+
+//同步封面和zip的素材保持一致，以封面的为依据
+//task buildSync(){
+//    String names= "";
+//    // 指定目录创建文件树对象
+//    FileTree tree = fileTree(dir: 'covers')
+//    // 遍历文件树的所有文件
+//    tree.each {File file ->
+//        names+="${file.name.replaceAll(".jpg","")},"
+//    }
+//
+//    FileTree zipsTree = fileTree(dir: 'zips')
+//    zipsTree.each {File file ->
+//        if(!names.contains(file.name.replaceAll(".zip",""))){
+//            file.delete();
+//        }
+//    }
+//}
