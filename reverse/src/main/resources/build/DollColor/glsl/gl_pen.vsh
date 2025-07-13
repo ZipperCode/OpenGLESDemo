@@ -7,9 +7,9 @@ attribute float fParticleSize;
 attribute float fParticleAngle;
 
 varying vec3 v_Color;
-varying float v_ParticleAngle;
-uniform float vFboSize;
-uniform float vMaskSize;
+varying float v_ParticleAngle;  // 始终为0
+uniform float vFboSize;   // fboW / fboH
+uniform float vMaskSize;  // modelW / modelH
 varying float fFboSize;
 varying float fMaskSize;
 

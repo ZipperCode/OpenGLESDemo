@@ -16,7 +16,7 @@ import java.nio.charset.StandardCharsets
  */
 object Main {
 
-    private const val RES_PATH = "/Users/Zipper/Github/OpenGLESDemo/reverse/src/main/resources/"
+    private const val RES_PATH = "D:\\Project\\AndroidProject\\OpenGLEDemo\\reverse\\src\\main\\resources"
 
     private val outDir: File = File("${RES_PATH}${File.separator}build${File.separator}DollColor")
 
@@ -26,6 +26,8 @@ object Main {
         val listFiles = inDir.listFiles() ?: return
         val jsonFiles = listFiles.filter { it.name.endsWith(".json") }
         val decodeConfig = decodeConfig("z224667603.json")
+        val configOutFile = File(outDir, "config.json")
+        configOutFile.writeText(Gson().toJson(decodeConfig))
         for (jsonFile in jsonFiles) {
             runCatching {
                 val resConfigMap = decodeResConfig(decodeConfig.localAssetsKey, jsonFile.name)

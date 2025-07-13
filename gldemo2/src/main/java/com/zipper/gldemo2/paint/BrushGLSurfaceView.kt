@@ -11,7 +11,7 @@ import android.view.MotionEvent
 import com.zipper.gldemo2.selection.PickColorDrawer
 import com.zipper.gldemo2.selection.SelectionDrawer
 import com.zipper.gldemo2.selection.SelectionRect
-import com.zipper.opengl.filter.OffscreenBufferHelper
+import javax.microedition.khronos.opengles.GL10
 
 class BrushGLSurfaceView(context: Context?, attrs: AttributeSet?) : GLSurfaceView(context, attrs) {
 

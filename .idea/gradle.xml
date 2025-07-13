@@ -12,9 +12,12 @@
             <option value="$PROJECT_DIR$" />
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/egl_fbo" />
+            <option value="$PROJECT_DIR$/gl_base" />
+            <option value="$PROJECT_DIR$/gl_pen" />
             <option value="$PROJECT_DIR$/gl_vector" />
             <option value="$PROJECT_DIR$/gldemo2" />
             <option value="$PROJECT_DIR$/gradientdemo" />
+            <option value="$PROJECT_DIR$/reverse" />
           </set>
         </option>
       </GradleProjectSettings>
