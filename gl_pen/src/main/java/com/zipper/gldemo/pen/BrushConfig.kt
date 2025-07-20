@@ -6,6 +6,7 @@ package com.zipper.gldemo.pen
 data class BrushConfig(
     val name: String,
     val brushPath: String,
-    val sizeScale: Float,
-    val pixInterval: Int
+    val brushSize: Float,
+    val pixInterval: Int,
+    val baseScale: Float = 2f
 )

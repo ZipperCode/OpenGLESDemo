@@ -4,8 +4,8 @@ varying vec3 v_Color;
 varying float v_ParticleAngle;
 
 uniform sampler2D fUnitTexture;
-varying float fFboSize;
-varying float fMaskSize;
+varying float fFboSize;  // fboW / fboH
+varying float fMaskSize; // modelW / modelH
 
 
 float myradians(float degrees) {

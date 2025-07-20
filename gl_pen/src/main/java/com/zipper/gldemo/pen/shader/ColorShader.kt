@@ -1,6 +1,7 @@
 package com.zipper.gldemo.pen.shader
 
 import com.zipper.gl.base.GL
+import com.zipper.gl.base.GLColor
 
 class ColorShader : BaseShader() {
 
@@ -24,11 +25,15 @@ class ColorShader : BaseShader() {
     }
 
 
-    private val colorArr = floatArrayOf(1.0f, 1.0f, 1.0f, 1.0f)
+    private val glColor = GLColor()
+
+    fun setColor(color: Int) {
+        glColor.setColor(color)
+    }
 
     override fun render(mvpMatrix: FloatArray) {
         super.render(mvpMatrix)
-        program.glUniform4fv("uColor", colorArr)
+        program.glUniform4fv("uColor", glColor.values())
         GL.glDrawArrays(GL.GL_TRIANGLE_STRIP, 0, 4)
     }
 

@@ -1,5 +1,6 @@
 package com.zipper.gl.base
 
+import android.opengl.Matrix
 import com.zipper.gl.base.math.Matrix4
 import com.zipper.gl.base.math.Vector3
 import com.zipper.gl.base.math.Vector4
@@ -67,9 +68,9 @@ class OrthographicCamera {
     private var glTranslateX = 0f
     private var glTranslateY = 0f
 
-    private var renderWidth = 2048
-    private var renderHeight = 2048
-    val renderRatio get() = renderWidth * 1f / renderHeight
+    private var modelWidth = 2048
+    private var modelHeight = 2048
+    val renderRatio get() = modelWidth * 1f / modelHeight
     var viewportWidth = 1920
         private set
     var viewportHeight = 1080
@@ -93,8 +94,8 @@ class OrthographicCamera {
     }
 
     fun updateRenderSize(width: Int, height: Int) {
-        this.renderWidth = width
-        this.renderHeight = height
+        this.modelWidth = width
+        this.modelHeight = height
         updateProjectionMatrix()
         updateViewMatrix()
     }
@@ -191,21 +192,106 @@ class OrthographicCamera {
     }
 
     /**
-     * 判断屏幕坐标是否在模型内，并取出相对于模型坐标
-     * @param x 屏幕坐标x
-     * @param y 屏幕坐标y
-     * @return 相对于模型的坐标
+     * 获取屏幕坐标对应的模型坐标
+     * 如果超出边界则返回边界值
      */
-    fun getModelOffset(x: Float, y: Float): FloatArray? {
+    fun getModelOffset(x: Float, y: Float): FloatArray {
         val glX = (x / viewportWidth).normalizeX()
         val glY = (y / viewportHeight).normalizeY()
 
-        if (glX > finalBottomRightVec.x || glX < finalTopLeftVec.x || glY > finalTopLeftVec.y || glY < finalBottomRightVec.y) {
-            return null
-        }
-        val modelX = (glX - finalTopLeftVec.x) / (finalBottomRightVec.x - finalTopLeftVec.x)
-        val modelY = (glY - finalTopLeftVec.y) / (finalTopLeftVec.y - finalBottomRightVec.y)
+        // 如果超出边界，设置为边界值
+        val clampedGlX = glX.coerceIn(finalTopLeftVec.x..finalBottomRightVec.x)
+        val clampedGlY = glY.coerceIn(finalBottomRightVec.y..finalTopLeftVec.y)
+
+        val modelX = (clampedGlX - finalTopLeftVec.x) / (finalBottomRightVec.x - finalTopLeftVec.x)
+        val modelY = (clampedGlY - finalTopLeftVec.y) / (finalTopLeftVec.y - finalBottomRightVec.y)
         return floatArrayOf(modelX, modelY)
+    }
+
+    fun getNdcVertex(x: Float, y: Float, vec: Vector4) {
+        val ndcX = (x / viewportWidth).normalizeX()
+        val ndcY = (y / viewportHeight).normalizeY()
+        val invertedMvpMatrix = FloatArray(16)
+        Matrix.invertM(invertedMvpMatrix, 0, mvp.values(), 0)
+        val worldCoords = FloatArray(4)
+        val ndcCoords = floatArrayOf(ndcX, ndcY, 0f, 1f) // z 和 w 分量
+        Matrix.multiplyMV(worldCoords, 0, invertedMvpMatrix, 0, ndcCoords, 0);
+
+//        mvp.multiplyVec(vec.set(ndcCoords[0], glY, 0f, 1f).values())
+    }
+
+    fun getNdcVertex(x: Float, y: Float): FloatArray {
+        val ndcX = (x / viewportWidth).normalizeX()
+        val ndcY = (y / viewportHeight).normalizeY()
+        val invertedMvpMatrix = FloatArray(16)
+        Matrix.invertM(invertedMvpMatrix, 0, mvp.values(), 0)
+        val worldCoords = FloatArray(4)
+        val ndcCoords = floatArrayOf(ndcX, ndcY, 0f, 1f) // z 和 w
+        Matrix.multiplyMV(worldCoords, 0, invertedMvpMatrix, 0, ndcCoords, 0);
+        return ndcCoords
+    }
+
+    fun screenToWorld(screenX: Float, screenY: Float): FloatArray {
+        // 1. 转换到 NDC 坐标系
+        // Y 轴需要翻转，因为屏幕坐标原点在左上，NDC 在中间
+        val ndcX: Float = (screenX / viewportWidth) * 2.0f - 1.0f
+        val ndcY: Float = 1.0f - (screenY / viewportHeight) * 2.0f
+
+        // 2. 计算 MVP 矩阵及其逆矩阵
+        val mvpMatrix = FloatArray(16)
+        val invertedMvpMatrix = FloatArray(16)
+        Matrix.multiplyMM(mvpMatrix, 0, project.values(), 0, model.values(), 0)
+        Matrix.invertM(invertedMvpMatrix, 0, mvpMatrix, 0)
+
+        // 3. 将 NDC 坐标乘以逆矩阵，转换到世界坐标
+        val worldCoords = FloatArray(4)
+        val ndcCoords = floatArrayOf(ndcX, ndcY, 0f, 1f) // z 和 w 分量
+        Matrix.multiplyMV(worldCoords, 0, invertedMvpMatrix, 0, ndcCoords, 0)
+
+        // 4. 透视除法
+        if (worldCoords[3] != 0f) {
+            worldCoords[0] /= worldCoords[3]
+            worldCoords[1] /= worldCoords[3]
+        }
+
+        return floatArrayOf(worldCoords[0], worldCoords[1])
+    }
+
+    fun viewToWorld(viewX: Float, viewY: Float): FloatArray {
+        // 1. 计算组合的 View-Projection 矩阵 (VP = P * V)
+        val viewProjectionMatrix = FloatArray(16)
+        Matrix.multiplyMM(viewProjectionMatrix, 0, project.values(), 0, view.values(), 0)
+
+        // 2. 计算 View-Projection 矩阵的逆矩阵 (VP)^-1
+        val invertedViewProjectionMatrix = FloatArray(16)
+        if (!Matrix.invertM(invertedViewProjectionMatrix, 0, viewProjectionMatrix, 0)) {
+            // 如果矩阵不可逆（例如，缩放为0），则无法转换，返回一个默认值
+            return floatArrayOf(0f, 0f)
+        }
+
+        // 3. 将屏幕坐标 (0, width) 转换为 NDC 坐标 (-1, 1)
+        // Y轴需要翻转
+        val ndcX = (viewX / viewportWidth) * 2f - 1f
+        val ndcY = 1f - (viewY / viewportHeight) * 2f
+
+        // 4. 创建一个代表近裁剪平面上的点的NDC向量
+        // 我们将Z分量设为-1，表示该点位于近裁剪平面上。
+        // 对于2D绘图，这通常是我们想要的结果。w分量为1。
+        val ndcVec = floatArrayOf(ndcX, ndcY, -1f, 1f)
+
+        // 5. 使用逆矩阵将NDC坐标变换回世界坐标
+        val worldVec = FloatArray(4)
+        Matrix.multiplyMV(worldVec, 0, invertedViewProjectionMatrix, 0, ndcVec, 0)
+
+        // 6. 进行透视除法（用w分量归一化）
+        // 这是非常关键的一步，以撤销原始的透视除法
+        if (worldVec[3] != 0f) {
+            worldVec[0] /= worldVec[3]
+            worldVec[1] /= worldVec[3]
+            // worldVec[2] /= worldVec[3] // Z坐标，如果需要的话
+        }
+
+        return floatArrayOf(worldVec[0], worldVec[1])
     }
 
     fun getMinRange(): FloatArray = finalTopLeftVec.values()
@@ -213,7 +299,7 @@ class OrthographicCamera {
 
     private fun updateProjectionMatrix() {
         val ratio = this.viewportWidth * 1f / this.viewportHeight
-        val renderRatio = this.renderWidth * 1f / this.renderHeight
+        val renderRatio = this.modelWidth * 1f / this.modelHeight
         var left = -1f
         var right = 1f
         var top = 1f
@@ -235,6 +321,7 @@ class OrthographicCamera {
                 right = ratio / renderRatio
             }
         }
+//        Matrix.orthoM(project.values(), 0, left, right, bottom, top, near, far)
         project.orthographic(left, right, bottom, top, near, far)
     }
 

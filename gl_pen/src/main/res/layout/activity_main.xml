@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
@@ -10,5 +11,59 @@
         android:id="@+id/pen_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_brush_size"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="笔刷大小:"
+        app:layout_constraintBottom_toTopOf="@id/seekBar"
+        app:layout_constraintStart_toStartOf="@id/seekBar" />
+
+    <androidx.appcompat.widget.AppCompatSeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        app:layout_constraintBottom_toTopOf="@id/btn1" />
+
+    <Button
+        android:id="@+id/btn1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="铅笔"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <Button
+        android:id="@+id/btn2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="蜡笔"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btn1" />
+
+    <Button
+        android:id="@+id/btn3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="清理"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btn2" />
+
+    <Button
+        android:id="@+id/btn_back"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="后退"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btn3" />
+
+    <Button
+        android:id="@+id/btn_forward"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="恢复"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@id/btn_back" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

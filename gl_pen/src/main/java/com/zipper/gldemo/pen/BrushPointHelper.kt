@@ -1,5 +1,6 @@
 package com.zipper.gldemo.pen
 
+import android.util.Log
 import com.zipper.gl.base.distance
 import com.zipper.gl.base.normalize
 import com.zipper.gl.base.normalizeNdcX
@@ -12,7 +13,8 @@ object BrushPointHelper {
      * 笔刷缩放转化
      */
     fun convertBrushRenderSize(resSize: Float, brushSize: Float, zoomFactor: Float): Float {
-        return resSize * brushSize / sqrt(zoomFactor)
+        // 4 20 2 => 20 * (4 / 2)
+        return brushSize / sqrt(zoomFactor / resSize)
     }
 
     fun brushPointCreator(
@@ -22,9 +24,10 @@ object BrushPointHelper {
         minRange: FloatArray,
         maxRange: FloatArray,
         pixInterval: Int,
+        scale: Float,
         onPoint: (BrushPoint) -> Unit
     ) {
-        val pointCount = (distance(startX, startY, curX, curY) / pixInterval).toInt()
+        val pointCount = (distance(startX, startY, curX, curY) / pixInterval / scale).toInt()
 
         if (pointCount <= 1) {
             val point = createBrushPointInRange(startX, startY, width, height, minRange, maxRange)
@@ -41,6 +44,7 @@ object BrushPointHelper {
                 onPoint(point)
             }
         } else {
+            // Log.d("BAAA", "pointCount = $pointCount")
             for (i in 0 until pointCount) {
                 val t = i * 1.0f / pointCount
                 val point = createBrushPointInRange(

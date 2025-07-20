@@ -6,11 +6,10 @@ package com.zipper.gldemo.pen
 data class BrushPointInfo(
     val pointX: Float,
     val pointY: Float,
+    val brushSize: Float,
     val r: Float,
     val g: Float,
-    val b: Float,
-    val a: Float,
-    val brushSize: Float,
+    val b: Float
 ) {
 
 }

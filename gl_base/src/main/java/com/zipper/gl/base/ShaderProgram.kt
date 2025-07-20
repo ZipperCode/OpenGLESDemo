@@ -116,10 +116,10 @@ open class ShaderProgram(
         GL.glVertexAttribPointer(location, size, type, normalized, stride, buffer)
     }
 
-    fun setTexture(name: String, texture: GLTexture, index: Int) {
-        GL.glActiveTexture(GL.GL_TEXTURE0 + index)
+    fun setTexture(name: String, texture: GLTexture, textureOffset: Int) {
+        GL.glActiveTexture(GL.GL_TEXTURE0 + textureOffset)
         texture.bind()
-        setUniform1i(name, index)
+        setUniform1i(name, textureOffset)
     }
 
 

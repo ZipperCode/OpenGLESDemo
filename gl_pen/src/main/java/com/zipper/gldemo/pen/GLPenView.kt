@@ -1,13 +1,12 @@
 package com.zipper.gldemo.pen
 
-import android.R.attr.endX
-import android.R.attr.endY
 import android.annotation.SuppressLint
 import android.content.Context
 import android.opengl.GLSurfaceView
 import android.os.Handler
 import android.os.Looper
 import android.util.AttributeSet
+import android.util.Log
 import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.ScaleGestureDetector
@@ -37,6 +36,40 @@ class GLPenView(
         renderMode = RENDERMODE_WHEN_DIRTY
     }
 
+    fun setBrushConfig(config: BrushConfig) {
+        queueEvent {
+            proxyRender.setBrushConfig(config)
+            requestRender()
+        }
+    }
+
+    fun setBrushSize(size: Float) {
+        queueEvent {
+            proxyRender.brushSize = size
+        }
+    }
+
+    fun clean() {
+        queueEvent {
+            proxyRender.clean()
+            requestRender()
+        }
+    }
+
+    fun undo() {
+        queueEvent {
+            proxyRender.undo()
+            requestRender()
+        }
+    }
+
+    fun fallback() {
+        queueEvent {
+            proxyRender.fallback()
+            requestRender()
+        }
+    }
+
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
         proxyRender.onSurfaceCreated(gl, config)
     }
@@ -56,19 +89,19 @@ class GLPenView(
 
     private fun onDown(x: Float, y: Float) {
         queueEvent {
-            proxyRender.onScroll(x, y, x, y)
+            proxyRender.onScroll(x, y, x, y, true)
         }
         requestRender()
     }
 
     private fun onScroll(dx: Float, dy: Float) {
-        // orthographicCamera.onScroll(dx, dy)
+        orthographicCamera.onScroll(dx, dy)
         requestRender()
     }
 
-    private fun onScroll(startX: Float, startY: Float, endX: Float, endY: Float) {
+    private fun onScroll(startX: Float, startY: Float, endX: Float, endY: Float, isFirstDown: Boolean) {
         queueEvent {
-            proxyRender.onScroll(startX, startY, endX, endY)
+            proxyRender.onScroll(startX, startY, endX, endY, isFirstDown)
         }
         requestRender()
     }
@@ -95,25 +128,45 @@ class GLPenView(
 
     private val minScale = 1f
 
-    private val maxScale = 5f
+    private val maxScale = 8f
 
     private var currentScale = 1f
+
+
+    enum class Action {
+        None,
+        Down,
+        PointDown,
+        PointUp,
+        Up
+    }
+
+    private var currentAction = Action.None
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
         event ?: return false
         if (event.action == MotionEvent.ACTION_DOWN) {
+            currentAction = Action.Down
             state = State.Drag
         } else if (event.actionMasked == MotionEvent.ACTION_POINTER_DOWN) {
+            currentAction = Action.PointDown
             state = State.Zone
         } else if (event.actionMasked == MotionEvent.ACTION_POINTER_UP) {
             state = State.None
+            currentAction = Action.PointUp
+        } else if (event.action == MotionEvent.ACTION_UP || event.action == MotionEvent.ACTION_CANCEL) {
+            currentAction = Action.Up
+            state = State.None
+        }
+        if (currentAction == Action.PointDown) {
+            scaleGestureDetector.onTouchEvent(event)
+            doubleGestureDetector.onTouchEvent(event)
+            return true
         }
 
-        if (state == State.Drag) {
+        if (currentAction == Action.Down || currentAction == Action.Up) {
             gestureDetector.onTouchEvent(event)
-        } else if (state == State.Zone) {
-            scaleGestureDetector.onTouchEvent(event)
         }
 
         return true
@@ -151,8 +204,33 @@ class GLPenView(
 
     // ======================================= [Down] =======================================  //
 
+    private val doubleGestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
+
+        override fun onDown(e: MotionEvent): Boolean {
+            isDown = true
+            removeCallbacks(flingRunnable)
+            return true
+        }
+
+        override fun onScroll(e1: MotionEvent?, e2: MotionEvent, distanceX: Float, distanceY: Float): Boolean {
+            // Log.d("BAAA", "onScroll dx = $distanceX dy = $distanceY")
+            orthographicCamera.onScroll(distanceX, distanceY)
+            requestRender()
+            return true
+        }
+
+        override fun onSingleTapUp(e: MotionEvent): Boolean {
+            startX = null
+            startY = null
+            return true
+        }
+    }, Handler(Looper.getMainLooper()))
+
     private var startX: Float? = null
     private var startY: Float? = null
+
+    private var downX: Float? = null
+    private var downY: Float? = null
 
     private var isDown = false
 
@@ -161,7 +239,9 @@ class GLPenView(
         removeCallbacks(flingRunnable)
         startX = e.x
         startY = e.y
-        return true
+        downX = e.x
+        downY = e.y
+        return false
     }
 
     final override fun onShowPress(e: MotionEvent) = Unit
@@ -169,6 +249,7 @@ class GLPenView(
     final override fun onLongPress(e: MotionEvent) = Unit
 
     final override fun onSingleTapUp(e: MotionEvent): Boolean {
+        Log.d("BAAA", "onSingleTapUp x = $x y = $y")
         if (isDown) {
             onDown(e.x, e.y)
             isDown = false
@@ -191,7 +272,10 @@ class GLPenView(
         val startX = this.startX ?: e1?.x ?: return false
         val startY = this.startY ?: e1?.y ?: return false
         removeCallbacks(flingRunnable)
-        onScroll(startX, startY, e2.x, e2.y)
+        // Log.d("BAAA", "onScroll x = ${e1?.x} y = ${e1?.y}")
+
+        val firstScroll = startX == downX && startY == downY
+        onScroll(startX, startY, e2.x, e2.y, firstScroll)
         this.startX = e2.x
         this.startY = e2.y
         return true
@@ -243,3 +327,5 @@ class GLPenView(
     }
 
 }
+
+

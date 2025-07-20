@@ -62,6 +62,10 @@ open class GLTexture(
         unbind()
     }
 
+    fun texImage2D(bitmap: Bitmap) {
+        GLUtils.texImage2D(glTarget, 0, bitmap, 0)
+    }
+
     fun texImage2D(width: Int, height: Int, format: Int = GL.GL_RGBA, type: Int = GL.GL_UNSIGNED_BYTE) {
         GL.glTexImage2D(glTarget, 0, GL.GL_RGBA, width, height, 0, format, type, null)
     }
