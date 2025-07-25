@@ -15,6 +15,7 @@ import com.zipper.gldemo.pen.shader.ColorShader
 import com.zipper.gldemo.pen.shader.TextureShader
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
+import kotlin.math.hypot
 
 class BrushRenderer(
     private val context: Context,
@@ -29,7 +30,7 @@ class BrushRenderer(
     /**
      * 笔刷大小
      */
-    var brushSize = 40f
+    var brushSize = 60f
 
     private val colorShader = ColorShader()
     private val brushShader = BrushShader(context)
@@ -109,8 +110,9 @@ class BrushRenderer(
             }
             fallbackStack.clear()
         }
+        hypot(startX - endX, startY - endY)
 
-        pen.generatePoints2(startX, startY, endX, endY) {
+        pen.generatePoints(startX, startY, endX, endY) {
 //            Log.i("BAAA", "滑动 > startX = $startX startY = $startY endX = $endX endY = $endY >>>> point = $it")
             currentBrushRecord?.brushPoints?.add(it)
             brushShader.addPoint(
@@ -130,6 +132,7 @@ class BrushRenderer(
     }
 
     override fun onSurfaceChanged(gl: GL10?, width: Int, height: Int) {
+        camera.updateViewport(width, height)
         mixFrameBuffer.resize(width, height)
         penFrameBuffer.resize(width, height)
         mixFrameBuffer.use {
@@ -140,6 +143,8 @@ class BrushRenderer(
     }
 
     override fun onDrawFrame(gl: GL10?) {
+        camera.update()
+        camera.updateModelUnitSize()
         GL.glClearColor(1.0f, 1.0f, 0.0f, 1.0f)
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GL_DEPTH_BUFFER_BIT)
 

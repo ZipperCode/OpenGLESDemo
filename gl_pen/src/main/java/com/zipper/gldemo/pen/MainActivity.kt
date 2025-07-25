@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
 
         binding.btn2.setOnClickListener {
             binding.tvBrushSize.text = "笔刷大小：${binding.seekBar.progress}"
-            val config = BrushManager.getBrushConfigs("Brush2") ?: return@setOnClickListener
+            val config = BrushManager.getBrushConfigs("Brush3") ?: return@setOnClickListener
             binding.penView.setBrushConfig(config)
         }
         binding.btn3.setOnClickListener {

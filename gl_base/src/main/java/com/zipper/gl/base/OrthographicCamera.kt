@@ -1,6 +1,7 @@
 package com.zipper.gl.base
 
 import android.opengl.Matrix
+import android.util.Log
 import com.zipper.gl.base.math.Matrix4
 import com.zipper.gl.base.math.Vector3
 import com.zipper.gl.base.math.Vector4
@@ -83,6 +84,8 @@ class OrthographicCamera {
      */
     val scrollSpeed: Float get() = if (renderRatio <= 1f) 2f else 4f
 
+    var pixelsPerModelUnit = 0.01f
+
     /**
      * 更新视口大小
      */
@@ -91,6 +94,8 @@ class OrthographicCamera {
         this.viewportHeight = height
         updateProjectionMatrix()
         updateViewMatrix()
+        update()
+        updateModelUnitSize()
     }
 
     fun updateRenderSize(width: Int, height: Int) {
@@ -98,6 +103,7 @@ class OrthographicCamera {
         this.modelHeight = height
         updateProjectionMatrix()
         updateViewMatrix()
+        update()
     }
 
     /**
@@ -257,41 +263,24 @@ class OrthographicCamera {
         return floatArrayOf(worldCoords[0], worldCoords[1])
     }
 
-    fun viewToWorld(viewX: Float, viewY: Float): FloatArray {
-        // 1. 计算组合的 View-Projection 矩阵 (VP = P * V)
-        val viewProjectionMatrix = FloatArray(16)
-        Matrix.multiplyMM(viewProjectionMatrix, 0, project.values(), 0, view.values(), 0)
-
-        // 2. 计算 View-Projection 矩阵的逆矩阵 (VP)^-1
-        val invertedViewProjectionMatrix = FloatArray(16)
-        if (!Matrix.invertM(invertedViewProjectionMatrix, 0, viewProjectionMatrix, 0)) {
-            // 如果矩阵不可逆（例如，缩放为0），则无法转换，返回一个默认值
-            return floatArrayOf(0f, 0f)
+    fun screenDistanceToWorldDistance(distancePx: Float): Float {
+        // 首先，我们需要 MVP 的逆矩阵，将屏幕点转换回世界点
+        val invertedMvp = FloatArray(16)
+        if (!Matrix.invertM(invertedMvp, 0, mvp.values(), 0)) {
+            // 矩阵不可逆，返回一个小的默认值
+            return 0.01f
         }
 
-        // 3. 将屏幕坐标 (0, width) 转换为 NDC 坐标 (-1, 1)
-        // Y轴需要翻转
-        val ndcX = (viewX / viewportWidth) * 2f - 1f
-        val ndcY = 1f - (viewY / viewportHeight) * 2f
+        // 在屏幕上取两个点，距离为 screenDistancePx
+        // 为了简化计算，我们只在X轴上取点
 
-        // 4. 创建一个代表近裁剪平面上的点的NDC向量
-        // 我们将Z分量设为-1，表示该点位于近裁剪平面上。
-        // 对于2D绘图，这通常是我们想要的结果。w分量为1。
-        val ndcVec = floatArrayOf(ndcX, ndcY, -1f, 1f)
+        val p1World = screenToWorld(0f, viewportHeight / 2f)
+        val p2World = screenToWorld(distancePx, viewportHeight / 2f)
 
-        // 5. 使用逆矩阵将NDC坐标变换回世界坐标
-        val worldVec = FloatArray(4)
-        Matrix.multiplyMV(worldVec, 0, invertedViewProjectionMatrix, 0, ndcVec, 0)
-
-        // 6. 进行透视除法（用w分量归一化）
-        // 这是非常关键的一步，以撤销原始的透视除法
-        if (worldVec[3] != 0f) {
-            worldVec[0] /= worldVec[3]
-            worldVec[1] /= worldVec[3]
-            // worldVec[2] /= worldVec[3] // Z坐标，如果需要的话
-        }
-
-        return floatArrayOf(worldVec[0], worldVec[1])
+        // 计算这两个世界坐标点之间的距离
+        val dx = p2World[0] - p1World[0]
+        val dy = p2World[1] - p1World[1]
+        return kotlin.math.sqrt(dx * dx + dy * dy)
     }
 
     fun getMinRange(): FloatArray = finalTopLeftVec.values()
@@ -335,6 +324,38 @@ class OrthographicCamera {
             .scale(scale, scale, scale)
             .translate(glTranslateX, glTranslateY, 0f)
 
+    }
+
+    fun updateModelUnitSize() {
+        val p1 = floatArrayOf(0f, 0f, 0f, 1f)
+        val p2 = floatArrayOf(1f, 0f, 0f, 1f)
+
+        mvp.multiplyVec(p1)
+        mvp.multiplyVec(p2)
+
+        val p1NdcW = p1[3]
+        val p2NdcW = p2[3]
+        if (p1NdcW == 0f || p2NdcW == 0f) {
+            pixelsPerModelUnit = 1f
+            return
+        }
+        val p1ndxX = p1[0] / p1NdcW
+        val p1ndxY = p1[1] / p1NdcW
+        val p2ndxX = p2[0] / p2NdcW
+        val p2ndxY = p2[1] / p2NdcW
+
+        val distance = distance(p1ndxX, p1ndxY, p2ndxX, p2ndxY)
+        // Log.i("BAAA", "p1X = $p1ndxX p1Y = $p1ndxY p2X = $p2ndxX p2Y = $p2ndxY d = $distance")
+
+        val p1ScreenX = (p1ndxX + 1) * viewportWidth / 2f
+        val p1ScreenY = (1f - p1ndxY) * viewportHeight / 2f
+        val p2ScreenX = (p2ndxX + 1) * viewportWidth / 2f
+        val p2ScreenY = (1f - p2ndxY) * viewportHeight / 2f
+
+        val screenDistance = distance(p1ScreenX, p1ScreenY, p2ScreenX, p2ScreenY)
+
+        // Log.d("BAAA", "screenDistance = $screenDistance")
+        pixelsPerModelUnit = screenDistance
     }
 
     private fun clampTranslate() {

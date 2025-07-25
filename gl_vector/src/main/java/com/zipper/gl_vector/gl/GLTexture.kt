@@ -12,7 +12,7 @@ open class GLTexture(
 
     val texture: Int get() = glHandle
 
-    fun init() {
+    fun init() = apply {
         if (glHandle == 0) {
 //            val buf = ByteBuffer.allocateDirect(4).order(ByteOrder.nativeOrder()).asIntBuffer()
 //            GL.glGenTextures(1, buf)
@@ -24,7 +24,7 @@ open class GLTexture(
         }
     }
 
-    fun bind() {
+    fun bind() = apply{
         if (glHandle != 0) {
             GL.glBindTexture(glTarget, glHandle)
         }
@@ -71,7 +71,7 @@ open class GLTexture(
         unbind()
     }
 
-    fun texImage2D(width: Int, height: Int, format: Int = GL.GL_RGBA, type: Int = GL.GL_UNSIGNED_BYTE) {
-        GL.glTexImage2D(glTarget, 0, GL.GL_RGBA, width, height, 0, format, type, null)
+    fun texImage2D(width: Int, height: Int, format: Int = GL.GL_RGBA, type: Int = GL.GL_UNSIGNED_BYTE) = apply {
+        GL.glTexImage2D(glTarget, 0, GL.GL_RGBA8, width, height, 0, format, type, null)
     }
 }

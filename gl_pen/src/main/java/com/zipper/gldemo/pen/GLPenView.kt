@@ -14,6 +14,7 @@ import android.view.View
 import android.widget.Scroller
 import com.zipper.gl.base.GL
 import com.zipper.gl.base.OrthographicCamera
+import com.zipper.gl.base.distance
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
 import kotlin.math.max
@@ -100,6 +101,8 @@ class GLPenView(
     }
 
     private fun onScroll(startX: Float, startY: Float, endX: Float, endY: Float, isFirstDown: Boolean) {
+        val distance = distance(startX, startY, endX, endY)
+        Log.e("BAAA", "startX = $startX startY = $startY endX = $endX endY = $endY distance = $distance")
         queueEvent {
             proxyRender.onScroll(startX, startY, endX, endY, isFirstDown)
         }
@@ -272,7 +275,7 @@ class GLPenView(
         val startX = this.startX ?: e1?.x ?: return false
         val startY = this.startY ?: e1?.y ?: return false
         removeCallbacks(flingRunnable)
-        // Log.d("BAAA", "onScroll x = ${e1?.x} y = ${e1?.y}")
+//         Log.d("BAAA", "onScroll x = ${e1?.x} y = ${e1?.y}")
 
         val firstScroll = startX == downX && startY == downY
         onScroll(startX, startY, e2.x, e2.y, firstScroll)
