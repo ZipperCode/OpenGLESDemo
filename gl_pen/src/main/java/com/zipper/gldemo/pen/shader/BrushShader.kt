@@ -12,11 +12,12 @@ class BrushShader(private val context: Context) {
 
     companion object {
 
-        const val VERTEX_SIZE = 6
+        const val VERTEX_SIZE = 7
 
         const val VERTEX_POS_LOC = 0
-        const val VERTEX_POINT_SIZE_LOC = 2
-        const val VERTEX_COLOR_LOC = 3
+        const val VERTEX_ANGLE_LOC = 2
+        const val VERTEX_POINT_SIZE_LOC = 3
+        const val VERTEX_COLOR_LOC = 4
 
         const val CAPACITY = 512
     }
@@ -85,10 +86,12 @@ class BrushShader(private val context: Context) {
     private fun configVertex() {
         val posLoc = program.fetchAttributeLocation("aPosition")
         glVertexBuffer.vertexAttrPointer(posLoc, VERTEX_POS_LOC, 2, VERTEX_SIZE * 4)
+        val angleLoc = program.fetchAttributeLocation("aAngle")
+        glVertexBuffer.vertexAttrPointer(angleLoc, VERTEX_ANGLE_LOC, 1, VERTEX_SIZE * 4)
         val pointSizeLoc = program.fetchAttributeLocation("aPointSize")
         glVertexBuffer.vertexAttrPointer(pointSizeLoc, VERTEX_POINT_SIZE_LOC, 1, VERTEX_SIZE * 4)
         val colorLoc = program.fetchAttributeLocation("aColor")
-        glVertexBuffer.vertexAttrPointer(colorLoc, VERTEX_COLOR_LOC, 4, VERTEX_SIZE * 4)
+        glVertexBuffer.vertexAttrPointer(colorLoc, VERTEX_COLOR_LOC, 3, VERTEX_SIZE * 4)
 
     }
 
@@ -97,6 +100,7 @@ class BrushShader(private val context: Context) {
         var index = 0
         tempVertex[index++] = record.vertexX
         tempVertex[index++] = record.vertexY
+        tempVertex[index++] = record.angle
         tempVertex[index++] = record.brushSize
         tempVertex[index++] = record.r
         tempVertex[index++] = record.g

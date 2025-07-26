@@ -102,7 +102,7 @@ class GLPenView(
 
     private fun onScroll(startX: Float, startY: Float, endX: Float, endY: Float, isFirstDown: Boolean) {
         val distance = distance(startX, startY, endX, endY)
-        Log.e("BAAA", "startX = $startX startY = $startY endX = $endX endY = $endY distance = $distance")
+        //Log.e("BAAA", "startX = $startX startY = $startY endX = $endX endY = $endY distance = $distance")
         queueEvent {
             proxyRender.onScroll(startX, startY, endX, endY, isFirstDown)
         }

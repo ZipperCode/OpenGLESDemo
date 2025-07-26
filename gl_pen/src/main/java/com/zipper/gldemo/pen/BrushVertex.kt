@@ -14,6 +14,8 @@ class BrushVertex {
 
     var b: Float = 0f
 
+    var angle: Float = 0f
+
     private var inUsed = true
 
     private var next: BrushVertex? = null
@@ -58,7 +60,7 @@ class BrushVertex {
             return BrushVertex()
         }
 
-        fun obtain(vertexX: Float, vertexY: Float, brushSize: Float, r: Float, g: Float, b: Float): BrushVertex {
+        fun obtain(vertexX: Float, vertexY: Float, angle: Float, brushSize: Float, r: Float, g: Float, b: Float): BrushVertex {
             return obtain().apply {
                 this.vertexX = vertexX
                 this.vertexY = vertexY
@@ -66,6 +68,7 @@ class BrushVertex {
                 this.r = r
                 this.g = g
                 this.b = b
+                this.angle = angle
             }
         }
     }

@@ -91,7 +91,7 @@ class BrushRenderer(
         for (point in record.brushPoints) {
             brushShader.addPoint(
                 BrushVertex.obtain(
-                    point.x, point.y, record.brushSize, glColor.r, glColor.g, glColor.b
+                    point.x, point.y, point.angle, record.brushSize, glColor.r, glColor.g, glColor.b
                 )
             )
         }
@@ -112,12 +112,12 @@ class BrushRenderer(
         }
         hypot(startX - endX, startY - endY)
 
-        pen.generatePoints(startX, startY, endX, endY) {
+        pen.onScroll(endX, endY, isFirstDown) {
 //            Log.i("BAAA", "滑动 > startX = $startX startY = $startY endX = $endX endY = $endY >>>> point = $it")
             currentBrushRecord?.brushPoints?.add(it)
             brushShader.addPoint(
                 BrushVertex.obtain(
-                    it.x, it.y, brushSize, glColor.r, glColor.g, glColor.b
+                    it.x, it.y, it.angle, brushSize, glColor.r, glColor.g, glColor.b
                 )
             )
         }
@@ -183,7 +183,7 @@ class BrushRenderer(
                     glColor.setColor(record.brushColor)
                     brushShader.addPoint(
                         BrushVertex.obtain(
-                            point.x, point.y, brushSize, glColor.r, glColor.g, glColor.b
+                            point.x, point.y, point.angle, brushSize, glColor.r, glColor.g, glColor.b
                         )
                     )
                 }

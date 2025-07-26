@@ -263,25 +263,6 @@ class OrthographicCamera {
         return floatArrayOf(worldCoords[0], worldCoords[1])
     }
 
-    fun screenDistanceToWorldDistance(distancePx: Float): Float {
-        // 首先，我们需要 MVP 的逆矩阵，将屏幕点转换回世界点
-        val invertedMvp = FloatArray(16)
-        if (!Matrix.invertM(invertedMvp, 0, mvp.values(), 0)) {
-            // 矩阵不可逆，返回一个小的默认值
-            return 0.01f
-        }
-
-        // 在屏幕上取两个点，距离为 screenDistancePx
-        // 为了简化计算，我们只在X轴上取点
-
-        val p1World = screenToWorld(0f, viewportHeight / 2f)
-        val p2World = screenToWorld(distancePx, viewportHeight / 2f)
-
-        // 计算这两个世界坐标点之间的距离
-        val dx = p2World[0] - p1World[0]
-        val dy = p2World[1] - p1World[1]
-        return kotlin.math.sqrt(dx * dx + dy * dy)
-    }
 
     fun getMinRange(): FloatArray = finalTopLeftVec.values()
     fun getMaxRange(): FloatArray = finalBottomRightVec.values()
@@ -310,7 +291,6 @@ class OrthographicCamera {
                 right = ratio / renderRatio
             }
         }
-//        Matrix.orthoM(project.values(), 0, left, right, bottom, top, near, far)
         project.orthographic(left, right, bottom, top, near, far)
     }
 

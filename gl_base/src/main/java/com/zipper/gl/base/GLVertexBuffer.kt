@@ -5,8 +5,6 @@ import java.nio.ByteOrder
 
 class GLVertexBuffer(vertex: FloatArray) {
 
-    private var vaoId = -1
-
     private val buffer = ByteBuffer.allocateDirect(vertex.size * 4).order(ByteOrder.nativeOrder()).asFloatBuffer().put(vertex)
 
     init {

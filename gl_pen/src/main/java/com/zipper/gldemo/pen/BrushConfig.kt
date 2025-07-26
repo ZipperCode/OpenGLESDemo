@@ -8,5 +8,4 @@ data class BrushConfig(
     val brushPath: String,
     val brushSize: Float,
     val pixInterval: Int,
-    val baseScale: Float = 2f
 )
